@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <building name="MyBuilding" orientation="45">
+  <floor name="UG" height="2.44">
+   <nodes>
+    <node id="1"  x="5.51"  y="0"     />
+    <node id="2"  x="7.51"  y="0"     />
+    <node id="3"  x="11.69" y="0"     />
+    <node id="4"  x="11.69" y="3.065" />
+    <node id="5"  x="13.19" y="3.065" />
+    <node id="6"  x="13.19" y="5.92"  />
+    <node id="7"  x="8.025" y="5.92"  />
+    <node id="8"  x="7.625" y="6.32"  />
+    <node id="9"  x="7.022" y="6.32"  />
+    <node id="10" x="5.51"  y="6.32"  />
+    <node id="11" x="5.51"  y="4.20" />
+    <node id="12" x="5.51"  y="3.115" />
+    <node id="13" x="7.51"  y="3.115" />
+    <node id="14" x="8.025" y="3.115" />
+    <node id="15" x="6.81"  y="4.20" />
+    <node id="16" x="7.022" y="4.50" />
+   </nodes>
+   <walls>
+    <wall start="1"  end="2"  thickness=".24" texture="wall" />
+    <wall start="2"  end="3"  thickness=".24" >
+      <hole id="window01" distance="0.5" width="0.88" paparet="0.6" lintel="0.5" />
+      <hole id="window11" distance="2.5" width="0.88" paparet="0.6" lintel="0.5" />
+    </wall>
+    <wall start="3"  end="4"  thickness=".24" >
+      <hole id="window02" distance="0.5" width="0.88" paparet="1.6" lintel="0.0" />
+    </wall>
+    <wall start="4"  end="5"  thickness=".24" />
+    <wall start="5"  end="6"  thickness=".24" />
+    <wall start="6"  end="7"  thickness=".24" texture="wall" />
+    <wall start="7"  end="8"  thickness=".24" />
+    <wall start="8"  end="9"  thickness=".24" />
+    <wall start="9"  end="10" thickness=".24" />
+    <wall start="10" end="11" thickness=".24" />
+    <wall start="11" end="12" thickness=".24" >
+      <hole id="door01" distance="0.3" width="0.88" paparet="0.0" lintel="0.2" />
+    </wall>
+    <wall start="12" end="1"  thickness=".24" /> 
+    <wall start="2"  end="13" thickness=".10" /> 
+    <wall start="12" end="13" thickness=".10">
+      <hole id="door01" distance="0.5" width="0.88" paparet="0.0" lintel="0.2" />
+    </wall>
+    <wall start="13" end="14" thickness=".10" />
+    <wall start="14" end="4"  thickness=".10" endoffset="-.07" /> 
+    <wall start="14" end="7"  thickness=".10" />
+    <wall start="9"  end="16" thickness=".10" />
+    <wall start="15" end="16" thickness=".10" />
+    <wall start="15" end="11" thickness=".10" /> 
+   </walls>
+   <rooms>
+    <room name="Bad">
+     <zone name="all" onclick="alert('Bad')">
+      <corner nodeid="1" />
+      <corner nodeid="2" />
+      <corner nodeid="13" />
+      <corner nodeid="12" />
+     </zone>
+    </room>
+    <room name="Kind">
+     <zone name="all" onclick="alert('Kind')">
+      <corner nodeid="2" />
+      <corner nodeid="3" />
+      <corner nodeid="4" />
+      <corner nodeid="14" />
+      <corner nodeid="13" />
+     </zone>
+    </room>
+    <room name="Hobby">
+     <zone name="all" onclick="alert('Hobby')">
+      <corner nodeid="4" />
+      <corner nodeid="5" />
+      <corner nodeid="6" />
+      <corner nodeid="7" />
+      <corner nodeid="14" />
+     </zone>
+    </room>
+    <room name="Abstell">
+     <zone name="all" onclick="alert('Abstell')">
+      <corner nodeid="9" />
+      <corner nodeid="10" />
+      <corner nodeid="11" />
+      <corner nodeid="15" />
+      <corner nodeid="16" />
+     </zone>
+    </room>
+    <room name="Flur">
+     <zone name="zone1" onclick="alert('Flur - Zone 1')">
+      <corner nodeid="11" />
+      <corner nodeid="12" />
+      <corner nodeid="13" />
+      <corner nodeid="14" />
+      <corner nodeid="16" />
+      <corner nodeid="15" />
+     </zone>
+     <zone name="zone2" onclick="alert('Flur - Zone 2')">
+      <corner nodeid="14" />
+      <corner nodeid="7"/>
+      <corner nodeid="8" />
+      <corner nodeid="9" />
+      <corner nodeid="16" />
+     </zone>
+    </room>
+   </rooms>
+  </floor>
+  <floor name="EG" height="2.44">
+   <nodes>
+    <node id="100"  x="0"     y="7.58" />
+    <node id="101"  x="0"     y="5.315"/>
+    <node id="102"  x="0"     y="4.205"/>
+    <node id="103"  x="0"     y="0"    />
+    <node id="104"  x="5.81"  y="0"    />
+    <node id="105"  x="7.86"  y="0"    />
+    <node id="106"  x="11.69" y="0"    />
+    <node id="107"  x="11.69" y="3.065"/>
+    <node id="108"  x="13.19" y="3.065"/>
+    <node id="109"  x="13.19" y="5.92" />
+    <node id="110"  x="8.025" y="5.92" />
+    <node id="111"  x="7.625" y="6.32" />
+    <node id="112"  x="4.91"  y="6.32" />
+    <node id="113"  x="4.91"  y="7.58" />
+    <node id="114"  x="3.48"  y="7.58" />
+
+    <node id="115"  x="1.47"  y="4.205"/>
+    <node id="116"  x="3.81"  y="4.205"/>
+    <node id="117"  x="4.045" y="3.97" />
+    <node id="118"  x="5.422" y="3.97" />
+    <node id="119"  x="5.422" y="3.37" />
+    <node id="120"  x="5.807" y="3.37" />
+    <node id="121"  x="6.457" y="3.37" />
+    <node id="122"  x="6.457" y="3.97" />
+    <node id="123"  x="7.022" y="3.97" />
+    <node id="124"  x="7.857" y="3.97" />
+    <node id="125"  x="8.025" y="5.055"/>
+    <node id="126"  x="7.022" y="5.055"/>
+    <node id="1262" x="7.022" y="5.105" z="0.9"/>
+    <node id="127"  x="7.022" y="5.315" z="0.9"/>
+    <node id="128"  x="4.79"  y="5.315" z="0.9"/>
+    <node id="129"  x="3.53"  y="5.315"/>
+    <node id="130"  x="3.48"  y="5.86" />
+    <node id="131"  x="3.08"  y="5.315"/>
+    <node id="132"  x="3.08"  y="5.86" />
+    <node id="133"  x="2.53"  y="5.86" />
+    <node id="134"  x="1.47"  y="5.315"/>
+   </nodes>
+   <walls>
+    <wall start="100"  end="101"  thickness=".24" texture="wall" >
+      <hole id="window100" distance="0.3" width="1.385" paparet="1.13" lintel="0.3" />
+    </wall>
+    <wall start="101"  end="102"  thickness=".24" texture="wall" >
+      <hole id="window101" distance="0.05" width="0.76" paparet="1.13" lintel="0.3" />
+    </wall>
+    <wall start="102"  end="103"  thickness=".24" >
+      <hole id="window102" distance="0.7" width="2.01" paparet="0.485" lintel="0.3" />
+    </wall>
+    <wall start="103"  end="104"  thickness=".24" >
+      <hole id="door100" distance="4.37" width="1.01" paparet="0.0" lintel="0.3" />
+    </wall>
+    <wall start="104"  end="105"  thickness=".24" >
+      <hole id="window104" distance="0.5" width="1.26" paparet="0.6" lintel="0.3" />
+    </wall>
+    <wall start="105"  end="106"  thickness=".24" >
+      <hole id="door101" distance="0.05" width="1.01" paparet="0.0" lintel="0.3" />
+    </wall>
+    <wall start="106"  end="107"  thickness=".24" >
+      <hole id="door102" distance="0.37" width="2.25" paparet="0.0" lintel="0.3" />
+    </wall>
+    <wall start="107"  end="108"  thickness=".24" >
+      <hole id="door103" distance="0.31" width="1.01" paparet="0.0" lintel="0.0" />
+    </wall>
+    <wall start="108"  end="109"  thickness=".24" >
+      <hole id="door104" distance="0.12" width="2.615" paparet="0.0" lintel="0.0" />
+    </wall>
+    <wall start="109"  end="110"  thickness=".24" />
+    <wall start="110"  end="111"  thickness=".24" />
+    <wall start="111"  end="112"  thickness=".24" />
+    <wall start="112"  end="113"  thickness=".24" />
+    <wall start="113"  end="114"  thickness=".24" >
+      <hole id="door105" distance="0.24" width="1.01" paparet="0.0" lintel="0.305" />
+    </wall>
+    <wall start="114"  end="100"  thickness=".24" />
+    <wall start="102"  end="115"  thickness=".10" />
+    <wall start="115"  end="116"  thickness=".10" />
+    <wall start="116"  end="117"  thickness=".10" />
+    <wall start="117"  end="118"  thickness=".10" >
+      <hole id="door106" distance="0.32" width="0.885" paparet="0.0" lintel="0.305" />
+    </wall>
+    <wall start="118"  end="119"  thickness=".10" />
+    <wall start="119"  end="120"  thickness=".10" />
+    <wall start="120"  end="121"  thickness=".10" />
+    <wall start="120"  end="104"  thickness=".10" />
+    <wall start="121"  end="122"  thickness=".10" />
+    <wall start="122"  end="123"  thickness=".10" />
+    <wall start="123"  end="124"  thickness=".10" />
+    <wall start="124"  end="105"  thickness=".10" >
+      <hole id="door107" distance="1.35" width="1.0" paparet="0.0" lintel="0.305" />
+    </wall>
+    <wall start="110"  end="125"  thickness=".10" />
+    <wall start="125"  end="126"  thickness=".10" />
+    <wall start="126"  end="123"  thickness=".10" >
+      <hole id="door108" distance="0.1" width="0.885" paparet="0.0" lintel="0.305" />
+    </wall>
+    <wall start="126"  end="1262"  thickness=".10" />
+    <wall start="1262"  end="127"  thickness=".10" />
+    <wall start="127"  end="128"  thickness=".10" />
+    <wall start="114"  end="130"  thickness=".10" />
+    <wall start="130"  end="132"  thickness=".10" />
+    <wall start="132"  end="131"  thickness=".10" />
+    <wall start="132"  end="133"  thickness=".10" />
+    <wall start="129"  end="131"  thickness=".10" />
+    <wall start="131"  end="134"  thickness=".10" >
+      <hole id="door109" distance="0.66" width="0.765" paparet="0.0" lintel="0.305" />
+    </wall>
+    <wall start="134"  end="115"  thickness=".10" >
+      <hole id="door110" distance="0.175" width="0.76" paparet="0.0" lintel="0.305" />
+    </wall>
+    <wall start="134"  end="101"  thickness=".10" />
+   </walls>
+   <rooms>
+    <room name="Bad EG">
+     <zone name="all" onclick="alert('Bad EG')">
+      <corner nodeid="100" />
+      <corner nodeid="101" />
+      <corner nodeid="134" />
+      <corner nodeid="131" />
+      <corner nodeid="132" />
+      <corner nodeid="130" />
+      <corner nodeid="114" />
+     </zone>
+    </room>
+   </rooms>
+  </floor>
+  <textures>
+    <texture id="wall" src="./textures/Wand.jpg" width="1" height="1" />
+    <texture id="ground" src="./textures/BodenGrau_1_3.jpg" width="1" height="1" />
+  </textures>
+ </building>
