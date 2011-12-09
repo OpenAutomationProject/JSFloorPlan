@@ -27,7 +27,6 @@
 // don't change anything below:
 var SVG_NS ="http://www.w3.org/2000/svg";
 var XLINK_NS ="http://www.w3.org/1999/xlink";
-var xmlDoc;
 var ELEMENT_NODE = 1;
 
 // calculate the distance between two cartesian 2D points
@@ -95,6 +94,7 @@ function setXlinkAttribute( element, attribute, value )
   return element.setAttributeNS( XLINK_NS, attribute, value );
 }
 
+/*
 function newXMLHttpRequest() 
 {
   try { return new XMLHttpRequest()                    } catch(e){}
@@ -115,7 +115,8 @@ if (typeof(XMLHttpRequest) == 'undefined')
     try { return new ActiveXObject("Microsoft.XMLHTTP")  } catch(e){}   
     return null;   
   };   
-}   
+} 
+*/
 
 /*******************************************************************/
 /* IE compatability stuff ends here                                */
@@ -141,7 +142,7 @@ function loadFloorplan()
       else if(httpRequest.responseXML.document == null) 
       {   
 	// IE   
-	if (!isLocal)   
+	if (!isLocal)  documentElement 
 	{
 	  // HTTP failure   
 	  failure();   
@@ -169,6 +170,7 @@ function loadFloorplan()
   parseXMLFloorPlan();
   */
   // code for IE
+  /*
   if (window.ActiveXObject)
   {
     xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
@@ -185,15 +187,9 @@ function loadFloorplan()
   xmlDoc.async=false;
   xmlDoc.onload = parseXMLFloorPlan;
   xmlDoc.load("floorplan01.xml");
-}
-function failure()
-{
-  alert("failure()");
-}
-function success( dom )
-{
-  xmlDoc = dom;
-  alert( xmlDoc );
+  */
+  $.get('floorplan01.xml', parseXMLFloorPlan, 'xml');
+  
 }
 var floor;
 var floorCount = -1;
@@ -207,8 +203,10 @@ var lines = Array();
 var buildingProperties = new Object;
 var imageCenter = new Object;
 
-function parseXMLFloorPlan()
+var noFloorplan = true;
+function parseXMLFloorPlan( xmlDoc )
 {
+  noFloorplan = false;
   // create the SVG node where all elements are collected in
   //var plan = document.createElementNS( SVG_NS, "g" );
   var plan = createSVGElement( "g" );
@@ -401,9 +399,9 @@ function parseXMLFloorPlan()
   imageCenter.y = buildingProperties.y_center;
   imageCenter.z = buildingProperties.z_max / 2;
 
-  show25D( 35*Math.PI/180, 30*Math.PI/180, plan );
-  document.getElementById( "top_level" ).appendChild( plan );
-
+  show3D( 35*Math.PI/180, 30*Math.PI/180, plan );
+  //document.getElementById( "top_level" ).appendChild( plan );
+  
   // clean up and save space
   delete xmlDoc;
 }
@@ -520,6 +518,7 @@ function parseFloorRooms( nodes, floor )
 //var textures = new Object();
 function parseTextures( nodes )
 {
+  return;
   var defs = createSVGElement( 'defs' );
   for( var i=0; i < nodes.childNodes.length; i++ )
   {
@@ -573,6 +572,8 @@ run_count = 5;
 function show25D( rotation, tilt, plan )
 {
   ////t_25d_start = new Date;
+  //console.log( rotation, tilt, plan );
+  return;
 
   var h_short = Math.cos( tilt ); // horizontal shortening factor
   var v_short = Math.sin( tilt ); // vertical shortening factor
@@ -833,4 +834,162 @@ function replaceSVG( SVGelement )
   SVGelement.replaceChild( plan, SVGelement.lastChild );
   delete plan;
   plan = createSVGElement( "g" );
+}
+
+var noSetup = true;
+function setup3D()
+{
+  if( noFloorplan ) return;
+  noSetup = false;
+  
+  for( var i=0; i<lines[showFloor].length; )
+  {
+    //console.log(i);
+    /*
+    var s1 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][  i][0] ], imageCenter );
+    var e1 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][  i][1] ], imageCenter );
+    var sm = rotate2D( rot_s, rot_c, floorNodes[ lines[showFloor][++i][1] ], imageCenter );
+    var em = rotate2D( rot_s, rot_c, floorNodes[ lines[showFloor][  i][0] ], imageCenter );
+    var sh = v_short * floorNodes[ lines[showFloor][i][1] ].z; 
+    var eh = v_short * floorNodes[ lines[showFloor][i][0] ].z;
+    var thickness = lines[showFloor][  i][2];
+    var texture   = lines[showFloor][  i][3];
+    var holes     = lines[showFloor][  i][4];
+    var s2 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][++i][0] ], imageCenter );
+    var e2 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][  i][1] ], imageCenter );
+    */
+    var s1 = vertices  [ lines[showFloor][  i][0] ];
+    var e1 = vertices  [ lines[showFloor][  i][1] ];
+    var sm = floorNodes[ lines[showFloor][++i][1] ];
+    var em = floorNodes[ lines[showFloor][  i][0] ];
+//    var sh = 2.44;//floorNodes[ lines[showFloor][i][1] ].z ; 
+//    var eh = 2.44;//floorNodes[ lines[showFloor][i][0] ].z ;
+    var sh = floorNodes[ lines[showFloor][i][1] ].z ; 
+    var eh = floorNodes[ lines[showFloor][i][0] ].z ;
+    var s2 = vertices  [ lines[showFloor][++i][0] ];
+    var e2 = vertices  [ lines[showFloor][  i][1] ];
+    ++i;
+    var wallSideOrder = (s2.x-s1.x)*(e1.y-s1.y) - (s2.y-s1.y)*(e1.x-s1.x);
+    //var Tvertices = [];
+    
+    /**************
+    var sphere = new THREE.Mesh( new THREE.SphereGeometry(0.1, 4, 4), sphereMaterial);
+    sphere.position = new THREE.Vector3(sm.x,sm.y,0);
+    //Tvertices.push(sphere.position);
+    scene.add(sphere);    
+    var sphere = new THREE.Mesh( new THREE.SphereGeometry(0.1, 4, 4), sphereMaterial);
+    sphere.position = new THREE.Vector3(sm.x,sm.y,sh);
+    //Tvertices.push(sphere.position);
+    scene.add(sphere);    
+    var sphere = new THREE.Mesh( new THREE.SphereGeometry(0.1, 4, 4), sphereMaterial);
+    sphere.position = new THREE.Vector3(em.x,em.y,0);
+    //Tvertices.push(sphere.position);
+    scene.add(sphere);    
+    var sphere = new THREE.Mesh( new THREE.SphereGeometry(0.1, 4, 4), sphereMaterial);
+    sphere.position = new THREE.Vector3(em.x,em.y,eh);
+    //Tvertices.push(sphere.position);
+    scene.add(sphere);    
+    */
+    var geometry = new THREE.Geometry();
+
+//var vertices = [];
+//vertices.push(new THREE.Vector3(0, 0, 0));
+//vertices.push(new THREE.Vector3(1, 0, 0));
+//vertices.push(new THREE.Vector3(0, 1, 0));
+    /*
+    for ( j = 0; j < vertices.length; j = j + 4) {
+      geometry.vertices.push(new THREE.Vertex(Tvertices[j]));
+      geometry.vertices.push(new THREE.Vertex(Tvertices[j+1]));
+      geometry.vertices.push(new THREE.Vertex(Tvertices[j+2]));
+      geometry.vertices.push(new THREE.Vertex(Tvertices[j+3]));
+      
+      geometry.faces.push(new THREE.Face3( j, j+1, j+2 ));
+      geometry.faces.push(new THREE.Face3( j+2, j+1, j+3 ));
+      
+      //geometry.faceVertexUvs[0].push([
+      //  new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value))
+      //]);
+    }
+    */
+    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,0)));
+    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,sh)));
+    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s1.x,s1.y,0)));
+    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s1.x,s1.y,sh)));
+    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(sm.x,sm.y,sh)));
+    
+    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s2.x,s2.y,0)));
+    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s2.x,s2.y,sh)));
+    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e2.x,e2.y,0)));
+    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e2.x,e2.y,sh)));
+    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(em.x,em.y,sh)));
+    
+    if( wallSideOrder < 0 )
+    {
+      // Add the wall sides
+      geometry.faces.push(new THREE.Face3( 0, 1, 2 ));
+      geometry.faces.push(new THREE.Face3( 3, 2, 1 ));
+      geometry.faces.push(new THREE.Face3( 5, 6, 7 ));
+      geometry.faces.push(new THREE.Face3( 8, 7, 6 ));
+      // Add the wall tops
+      geometry.faces.push(new THREE.Face3( 4, 3, 6 ));
+      geometry.faces.push(new THREE.Face3( 1, 6, 3 ));
+      geometry.faces.push(new THREE.Face3( 6, 1, 8 ));
+      geometry.faces.push(new THREE.Face3( 9, 8, 1 ));
+    } else { 
+      // Add the wall sides
+      geometry.faces.push(new THREE.Face3( 0, 2, 1 ));
+      geometry.faces.push(new THREE.Face3( 3, 1, 2 ));
+      geometry.faces.push(new THREE.Face3( 5, 7, 6 ));
+      geometry.faces.push(new THREE.Face3( 8, 6, 7 ));
+      // Add the wall tops
+      geometry.faces.push(new THREE.Face3( 4, 6, 3 ));
+      geometry.faces.push(new THREE.Face3( 1, 3, 6 ));
+      geometry.faces.push(new THREE.Face3( 6, 8, 1 ));
+      geometry.faces.push(new THREE.Face3( 9, 1, 8 ));
+    }
+    
+    
+    geometry.computeFaceNormals();
+    //var mesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial());
+    var mesh = new THREE.Mesh(geometry, cubeMaterial);
+    scene.add(mesh);
+  }
+  
+  ///////////
+  scene.add(pointLight);
+  scene.add(ambientLight);
+  scene.add( camera );
+   var $container = $('#top_level');
+  // attach the render-supplied DOM element
+  $container.append(renderer.domElement);
+  // draw!
+  //scene.add( camera );
+  //renderer.render(scene, camera); 
+  //render();
+//  animate();
+ 
+}
+
+function show3D( rotation, tilt, plan )
+{
+  if( noSetup ) setup3D();
+  
+  //var dist = 30;
+  /*
+  //camera.position.z = rotation * 180 / Math.PI;
+  //camera.rotation.z = rotation;
+  //camera.rotation.y = tilt;
+  camera.position.z = Math.sin(tilt) * dist;
+  camera.position.x = Math.cos(tilt) * dist * Math.sin(rotation);
+  camera.position.y = Math.cos(tilt) * dist * Math.cos(rotation);
+  */
+  //renderer.render(scene, camera);
+  var cx = -Math.cos(rotation) * Math.cos(tilt);
+  var cy =  Math.sin(rotation) * Math.cos(tilt);
+  var cz =  Math.sin(tilt);
+  camera.up = new THREE.Vector3( -cx, -cy, 1 );
+  camera.position = new THREE.Vector3( cx*dist + buildingProperties.x_center, cy*dist + buildingProperties.y_center, dist * cz );
+  camera.lookAt( new THREE.Vector3( buildingProperties.x_center, buildingProperties.y_center, 0) );
+  pointLight.position = camera.position;
+  render();
 }
