@@ -49,7 +49,7 @@
 </pre>
 <hr />
 <h2>Einstellungen:</h2>
-<form name="settings" method="get">
+<form>
 <table>
  <tr>
   <td>
@@ -59,31 +59,31 @@
  </tr>
  <tr>
   <td>
-   Zeige Wände: <input type="checkbox" name="showWallSides" onclick="check('showWallSides',true)" checked="checked" />
+   Zeige Wände: <input type="checkbox" name="showWallSides" checked="checked" />
   </td><td>
-   Zeige Deckel: <input type="checkbox" name="showWallTop" onclick="check('showWallTop',true)" checked="checked" />
+   Zeige Deckel: <input type="checkbox" name="showWallTop" checked="checked" />
   </td><td>
-   Zeige Rückseite: <input type="checkbox" name="showBackside" onclick="check('showBackside',true)" checked="checked" />
+   Zeige Rückseite: <input type="checkbox" name="showBackside" checked="checked" />
   </td><td>
-   Zeige MouseOver: <input type="checkbox" name="wallMouseOver" onclick="check('wallMouseOver',true)" />
+   Zeige MouseOver: <input type="checkbox" name="wallMouseOver" />
   </td>
  </tr>
  <tr>
   <td>
-   Wand-Umrandung: <input type="checkbox" name="showSideLines" onclick="check('showSideLines',true)" checked="checked" />
+   Wand-Umrandung: <input type="checkbox" name="showSideLines" checked="checked" />
   </td><td>
-   Deckel-Umrandung: <input type="checkbox" name="showTopLines" onclick="check('showTopLines',true)" checked="checked" />
+   Deckel-Umrandung: <input type="checkbox" name="showTopLines" checked="checked" />
   </td><td>
-   Zeige "Löcher": <input type="checkbox" name="showHoles" onclick="check('showHoles',true)" checked="checked" />
+   Zeige "Löcher": <input type="checkbox" name="showHoles" checked="checked" />
   </td><td>
-   Erzeuge Zonen: <input type="checkbox" name="showZones" onclick="check('showZones',true)" checked="checked" />
+   Erzeuge Zonen: <input type="checkbox" name="showZones" checked="checked" />
   </td><td>
-   Zeige Zonen: <input type="checkbox" name="showVisibleZones" onclick="check('showVisibleZones',true)" checked="checked" />
+   Zeige Zonen: <input type="checkbox" name="showVisibleZones" checked="checked" />
   </td>
  </tr>
  <tr>
   <td>
-   Transparenz: <select size="1" name="fillOpacity" onchange="selectValue('fillOpacity',true)">
+   Transparenz: <select size="1" name="fillOpacity">
 <option value="0.1">0.1 - sehr transparent</option>
 <option value="0.2">0.2</option>
 <option value="0.3">0.3</option>
@@ -96,7 +96,7 @@
 <option value="1.0">1.0 - undurchsichtig</option>
 </select>
   </td><td>
-   Farbe: <select size="1" name="fillColor" onchange="selectValue('fillColor',true)">
+   Farbe: <select size="1" name="fillColor">
 <option value="black" selected="selected">Schwarz</option>
 <option value="grey">Grau</option>
 <option value="white">Weiß</option>
@@ -105,7 +105,7 @@
 <option value="green">Grün</option>
 </select>
   </td><td>
-   Stockwerk: <select size="1" name="showFloor" onchange="selectValue('showFloor',true)">
+   Stockwerk: <select size="1" name="showFloor">
 <option value="0" selected="selected">0</option>
 <option value="1">1</option>
 </select>

@@ -57,6 +57,7 @@ var camera = new THREE.PerspectiveCamera(
                    ASPECT,
                    NEAR,
                    FAR );
+/*
 var controls = new THREE.TrackballControls( camera );
 //controls.rotateSpeed = 1.0;
 //controls.zoomSpeed = 1.2;
@@ -69,7 +70,7 @@ controls.staticMoving = true;
 controls.dynamicDampingFactor = 0.3;
 
 controls.keys = [ 65, 83, 68 ];
-
+*/
 var scene = new THREE.Scene();
 
 // the camera starts at 0,0,0 so pull it back
@@ -145,7 +146,7 @@ if ( !window.requestAnimationFrame ) {
 function animate() {
   requestAnimationFrame( animate );
   //render();
-  show3D();
+  show3D( roll, tilt );
   //stats.update();
 }
 
@@ -163,6 +164,8 @@ $(function() {
 /////////////////////////////////////////////////////////////////////////////
 // setup script here:
 var sc = 40; // overall scaling
+var showStates = {};
+/*
 var showWallSides    = true;
 var showWallTop      = true;
 var showSideLines    = true;
@@ -175,6 +178,7 @@ var showFloor        = 1;
 var wallMouseOver    = true;
 var fillOpacity      = 0.5;
 var fillColor        = 'black';
+*/
 var redrawInterval = 50; // in milliseconds; = 20 fps
 
 var roll = 35*Math.PI/180;
@@ -194,21 +198,20 @@ var t_25d_end;
 
 function init()
 {
-  check( 'showWallSides'    , false );
-  check( 'showWallTop'      , false );
-  check( 'showSideLines'    , false );
-  check( 'showTopLines'     , false );
-  check( 'showBackside'     , false );
-  check( 'showHoles'        , false );
-  check( 'showZones'        , false );
-  check( 'showVisibleZones' , false );
-  check( 'wallMouseOver'    , false );
-  selectValue( 'fillOpacity', false );
-  selectValue( 'fillColor'  , false );
-  selectValue( 'showFloor'  , false );
-
+  $('input').change(function(e){
+    showStates[ e.target.name ] = e.target.checked;
+    show3D( roll, tilt );
+  }).each(function(){
+    showStates[ this.name ] = this.checked; // init
+  });
+  $('select').change(function(e){
+    showStates[ e.target.name ] = e.target.value;
+    show3D( roll, tilt );
+  }).each(function(){
+    showStates[ this.name ] = this.value; // init
+  });
+  
   loadFloorplan();
-
   createSlider();
 }
 
@@ -224,6 +227,7 @@ function my_click()
     animation = setInterval(move, redrawInterval);
     toggle = true;
   }
+  return true;
 }
 
 function move()
@@ -239,7 +243,7 @@ function move()
   if( tilt < 0 )
     tilt_dir = 1;
 
-  show3D( roll, tilt, plan );
+  show3D( roll, tilt );
   //////
 
   var middle = new Date();
@@ -285,6 +289,7 @@ function showStats( text )
    document.getElementById('status').firstChild.data = text;
 }
 
+/*
 function set_color( event )
 {
   if( 'blue' != fillColor )
@@ -297,7 +302,8 @@ function unset_color( event )
 {
   event.setAttribute( 'fill', fillColor );
 } 
-
+*/
+/*
 function check( what, redraw )
 {
   eval( what +' = document.forms[0].elements[what].checked' );
@@ -321,7 +327,9 @@ function check( what, redraw )
     show3D( roll, tilt, plan );
   }
 }
+*/
 
+/*
 function selectValue( what, redraw )
 {
   var val = document.forms[0].elements[what].options[ document.forms[0].elements[what].selectedIndex ].value;
@@ -343,6 +351,7 @@ function selectValue( what, redraw )
     show3D( roll, tilt, plan );
   }
 }
+*/
 
 // Create the little graphics for the roll and the tilt angle
 // as well as the buttons to manipulate them
@@ -350,7 +359,7 @@ function createSlider()
 {
   $( "#rollSlider" ).slider({ min: 0, max: 360, change: rollChange, slide: rollChange});
   $( "#tiltSlider" ).slider({ min: 0, max:  90, change: tiltChange, slide: tiltChange});
-  $( "#distSlider" ).slider({ min: 5, max: 30, change: distChange, slide: distChange});
+  $( "#distSlider" ).slider({ min: 5, max:  30, change: distChange, slide: distChange});
   updateSlider();
 }
 
@@ -368,21 +377,21 @@ function updateSlider()
 
 function rollChange( event, ui ) 
 { 
-  if( globalInUpdateSlider ) return;
+  if( globalInUpdateSlider ) return true;
   roll = ui.value * Math.PI / 180;
-  show3D( roll, tilt, plan );
+  show3D( roll, tilt );
 }
 
 function tiltChange( event, ui ) 
 {
-  if( globalInUpdateSlider ) return;
+  if( globalInUpdateSlider ) return true;
   tilt = ui.value * Math.PI / 180;
-  show3D( roll, tilt, plan );
+  show3D( roll, tilt );
 }
 
 function distChange( event, ui ) 
 {
-  if( globalInUpdateSlider ) return;
+  if( globalInUpdateSlider ) return true;
   dist = ui.value;
-  show3D( roll, tilt, plan );
+  show3D( roll, tilt );
 }
