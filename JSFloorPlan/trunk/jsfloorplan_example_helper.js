@@ -22,6 +22,145 @@
  *                                                                         * 
  ***************************************************************************/
 
+
+function three_init()
+{
+  return;
+  // get the DOM element to attach to
+  // - assume we've got jQuery to hand
+  //var $container = $('#container');
+  var $container = $('#top_level');
+  // attach the render-supplied DOM element
+  $container.append(renderer.domElement);
+  // draw!
+  //scene.add( camera );
+  //renderer.render(scene, camera); 
+  //render();
+  animate();
+}
+// set the scene size
+var WIDTH = 800,
+    HEIGHT = 400;
+
+// set some camera attributes
+var VIEW_ANGLE = 45,
+    ASPECT = WIDTH / HEIGHT,
+    NEAR = 0.1,
+    FAR = 10000;
+
+
+// create a WebGL renderer, camera
+// and a scene
+var renderer = new THREE.WebGLRenderer();
+var camera = new THREE.PerspectiveCamera(
+                   VIEW_ANGLE,
+                   ASPECT,
+                   NEAR,
+                   FAR );
+var controls = new THREE.TrackballControls( camera );
+//controls.rotateSpeed = 1.0;
+//controls.zoomSpeed = 1.2;
+//controls.panSpeed = 0.8;
+
+controls.noZoom = false;
+controls.noPan = false;
+
+controls.staticMoving = true;
+controls.dynamicDampingFactor = 0.3;
+
+controls.keys = [ 65, 83, 68 ];
+
+var scene = new THREE.Scene();
+
+// the camera starts at 0,0,0 so pull it back
+camera.position.z = 300;
+
+// start the renderer
+renderer.setSize(WIDTH, HEIGHT);
+
+
+// set up the sphere vars
+var radius = 50, segments = 16, rings = 16;
+
+// create the sphere's material
+var sphereMaterial = new THREE.MeshLambertMaterial(
+{
+    color: 0xCC0000
+});
+// create a new mesh with sphere geometry -
+// we will cover the sphereMaterial next!
+var sphere = new THREE.Mesh(
+   new THREE.SphereGeometry(radius,
+   segments,
+   rings),
+
+   sphereMaterial);
+
+// add the sphere to the scene
+//scene.add(sphere);
+
+var cubeMaterial = new THREE.MeshLambertMaterial(
+{
+    color: 0x0000CC
+});
+var cube = new THREE.Mesh(
+  new THREE.CubeGeometry( 
+    10, 20, 30, 
+    2, 2),
+    cubeMaterial
+);
+cube.position = new THREE.Vector3(50,50,50);
+//scene.add( cube );
+
+// create a point light
+var pointLight = new THREE.PointLight( 0xFFFFFF );
+
+var ambientLight = new THREE.AmbientLight( 0xFFFFFF );
+// set its position
+pointLight.position.x = 10;
+pointLight.position.y = 50;
+pointLight.position.z = 130;
+
+// add to the scene
+//scene.add(pointLight);
+
+
+/**
+ * Provides requestAnimationFrame in a cross browser way.
+ * http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+ */
+
+if ( !window.requestAnimationFrame ) {
+  window.requestAnimationFrame = ( function() {
+    return window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    window.oRequestAnimationFrame ||
+    window.msRequestAnimationFrame ||
+    function( /* function FrameRequestCallback */ callback, /* DOMElement Element */ element ) {
+      window.setTimeout( callback, 1000 / 60 );
+  };
+} )();
+
+}
+function animate() {
+  requestAnimationFrame( animate );
+  //render();
+  show3D();
+  //stats.update();
+}
+
+function render() {
+ //controls.update();
+  renderer.render( scene, camera );
+}
+
+//}
+
+/////////////////////////////////////////////////////////////////////////////
+$(function() {
+  three_init();
+});
+/////////////////////////////////////////////////////////////////////////////
 // setup script here:
 var sc = 40; // overall scaling
 var showWallSides    = true;
@@ -32,7 +171,7 @@ var showBackside     = true;
 var showHoles        = true;
 var showZones        = true;
 var showVisibleZones = false;
-var showFloor        = 0;
+var showFloor        = 1;
 var wallMouseOver    = true;
 var fillOpacity      = 0.5;
 var fillColor        = 'black';
@@ -41,6 +180,7 @@ var redrawInterval = 50; // in milliseconds; = 20 fps
 var roll = 35*Math.PI/180;
 var tilt = 30*Math.PI/180;
 var tilt_dir = 1;
+var dist = 10;
   //var plan = createSVGElement( "g" );
 var f_avr = 0;
 var m_avr = 0;
@@ -99,14 +239,10 @@ function move()
   if( tilt < 0 )
     tilt_dir = 1;
 
-  show25D( roll, tilt, plan );
+  show3D( roll, tilt, plan );
   //////
 
   var middle = new Date();
-
-  //////
-  replaceSVG( document.getElementById( 'top_level' ) );
-  //////
 
   var post = new Date();
 
@@ -132,7 +268,8 @@ function move()
 
   var txt = '';//"c1: " + calc1 + "; c2: " + calc2;
 
-  var text = (m_avr<10?"0":"")+Math.floor(m_avr)+" Millisekunden zum Neuzeichnen verwendet\n"
+  var text = "roll: " + roll + "; tilt: " + tilt + " (" + (tilt*180/Math.PI) + "; " + tilt_dir + ")\n" + 
+  (m_avr<10?"0":"")+Math.floor(m_avr)+" Millisekunden zum Neuzeichnen verwendet\n"
     + Math.floor(f_avr)+" Millisekunden inklusive Neuberechnung verwendet (von " + redrawInterval + " Millisekunden)\n"
     + "Aktuelle, maximale Rate wären "+fps+" fps (aktuell festgesetzt sind "+Math.floor(1000/redrawInterval)+" FPS)\n"
 + "Die letzten 10 Schritte wären mindestes " + fps_min + " FPS und höchstens " + fps_max + " FPS möglich gewesen.\n"
@@ -181,8 +318,7 @@ function check( what, redraw )
 
   if( redraw )
   {
-    show25D( roll, tilt, plan );
-    replaceSVG( document.getElementById( 'top_level' ) );
+    show3D( roll, tilt, plan );
   }
 }
 
@@ -204,8 +340,7 @@ function selectValue( what, redraw )
 
   if( redraw )
   {
-    show25D( roll, tilt, plan );
-    replaceSVG( document.getElementById( 'top_level' ) );
+    show3D( roll, tilt, plan );
   }
 }
 
@@ -213,138 +348,41 @@ function selectValue( what, redraw )
 // as well as the buttons to manipulate them
 function createSlider()
 {
-  var rollAngle = (roll * 180/Math.PI).toFixed(1);
-  var tiltAngle = (tilt * 180/Math.PI).toFixed(1);
-
-  var rollWrapper = createSVGElement( 'g' );
-  rollWrapper.setAttribute( 'fill', 'none' );
-  var rollCircle  = createSVGElement( 'circle' );
-  rollCircle.setAttribute( 'cx', '50' );
-  rollCircle.setAttribute( 'cy', '50' );
-  rollCircle.setAttribute( 'r', '40' );
-  rollCircle.setAttribute( 'stroke', 'black' );
-  rollCircle.setAttribute( 'stroke-width', '1' );
-  rollCircle.setAttribute( 'fill', '#9999ff' );
-  rollWrapper.appendChild( rollCircle );
-  var rollArrow  = createSVGElement( 'path' );
-  rollArrow.setAttribute( 'd', 'M 50 50 L 50 10 L 55 20 L 45 20 L 50 10');
-  rollArrow.setAttribute( 'stroke', 'black' );
-  rollArrow.setAttribute( 'stroke-width', '2' );
-  rollArrow.setAttribute( 'fill', 'black' );
-  rollArrow.setAttribute( 'id', 'rollSliderArrow' );
-  rollArrow.setAttribute( 'transform', 'rotate('+rollAngle+' 50 50)' );
-  rollWrapper.appendChild( rollArrow );
-  var rollUp  = createSVGElement( 'rect' );
-  rollUp.setAttribute( 'x', '100' );
-  rollUp.setAttribute( 'y', '2' );
-  rollUp.setAttribute( 'width', '40' );
-  rollUp.setAttribute( 'height', '43' );
-  rollUp.setAttribute( 'stroke', 'black' );
-  rollUp.setAttribute( 'stroke-width', '1' );
-  rollUp.setAttribute( 'fill', '#bb99ff' );
-  rollUp.setAttribute( 'onmousedown', 'rollChange(-0.1)' );
-  rollWrapper.appendChild( rollUp );
-  var rollArrowUp  = createSVGElement( 'path' );
-  rollArrowUp.setAttribute( 'd', 'M109,9 l13,3 l-8,9 L110,10 a40,40 0 0,1 20,30 ' );
-  rollArrowUp.setAttribute( 'stroke', 'black' );
-  rollArrowUp.setAttribute( 'stroke-width', '2' );
-  rollArrowUp.setAttribute( 'onmousedown', 'rollChange(-0.1)' );
-  rollWrapper.appendChild( rollArrowUp );
-  var rollDn  = createSVGElement( 'rect' );
-  rollDn.setAttribute( 'x', '100' );
-  rollDn.setAttribute( 'y', '55' );
-  rollDn.setAttribute( 'width', '40' );
-  rollDn.setAttribute( 'height', '43' );
-  rollDn.setAttribute( 'stroke', 'black' );
-  rollDn.setAttribute( 'stroke-width', '1' );
-  rollDn.setAttribute( 'fill', '#bb99ff' );
-  rollDn.setAttribute( 'onmousedown', 'rollChange(0.1)' );
-  rollWrapper.appendChild( rollDn );
-  var rollArrowDn  = createSVGElement( 'path' );
-  rollArrowDn.setAttribute( 'd', 'M109,91 l13,-3 l-8,-9 L110,90 a40,40 0 0,0 20,-30 ' );
-  rollArrowDn.setAttribute( 'stroke', 'black' );
-  rollArrowDn.setAttribute( 'stroke-width', '2' );
-  rollArrowDn.setAttribute( 'onmousedown', 'rollChange(0.1)' );
-  rollWrapper.appendChild( rollArrowDn );
-  var SVGelement = document.getElementById( 'rollSlider' );
-  SVGelement.appendChild( rollWrapper, SVGelement.lastChild );
-
-  var tiltWrapper = createSVGElement( 'g' );
-  tiltWrapper.setAttribute( 'fill', 'none' );
-  var tiltCircle  = createSVGElement( 'path' );
-  tiltCircle.setAttribute( 'd', 'M10,10 a80,80 0 0,1 80,80 L10,90 z' );
-  tiltCircle.setAttribute( 'stroke', 'black' );
-  tiltCircle.setAttribute( 'stroke-width', '1' );
-  tiltCircle.setAttribute( 'fill', '#9999ff' );
-  tiltWrapper.appendChild( tiltCircle );
-  var tiltArrow  = createSVGElement( 'path' );
-  tiltArrow.setAttribute( 'd', 'M 10 90 L 10 10 L 15 20 L 5 20 L 10 10');
-  tiltArrow.setAttribute( 'stroke', 'black' );
-  tiltArrow.setAttribute( 'stroke-width', '2' );
-  tiltArrow.setAttribute( 'fill', 'black' );
-  tiltArrow.setAttribute( 'id', 'tiltSliderArrow' );
-  tiltArrow.setAttribute( 'transform', 'rotate('+tiltAngle+' 10 90)' );
-  tiltWrapper.appendChild( tiltArrow );
-  var tiltUp  = createSVGElement( 'rect' );
-  tiltUp.setAttribute( 'x', '100' );
-  tiltUp.setAttribute( 'y', '2' );
-  tiltUp.setAttribute( 'width', '40' );
-  tiltUp.setAttribute( 'height', '43' );
-  tiltUp.setAttribute( 'stroke', 'black' );
-  tiltUp.setAttribute( 'stroke-width', '1' );
-  tiltUp.setAttribute( 'fill', '#bb99ff' );
-  tiltUp.setAttribute( 'onmousedown', 'tiltChange(-0.1)' );
-  tiltWrapper.appendChild( tiltUp );
-  var tiltArrowUp  = createSVGElement( 'path' );
-  tiltArrowUp.setAttribute( 'd', 'M109,9 l13,3 l-8,9 L110,10 a40,40 0 0,1 20,30 ' );
-  tiltArrowUp.setAttribute( 'stroke', 'black' );
-  tiltArrowUp.setAttribute( 'stroke-width', '2' );
-  tiltWrapper.appendChild( tiltArrowUp );
-  var tiltDn  = createSVGElement( 'rect' );
-  tiltDn.setAttribute( 'x', '100' );
-  tiltDn.setAttribute( 'y', '55' );
-  tiltDn.setAttribute( 'width', '40' );
-  tiltDn.setAttribute( 'height', '43' );
-  tiltDn.setAttribute( 'stroke', 'black' );
-  tiltDn.setAttribute( 'stroke-width', '1' );
-  tiltDn.setAttribute( 'fill', '#bb99ff' );
-  tiltDn.setAttribute( 'onmousedown', 'tiltChange(0.1)' );
-  tiltWrapper.appendChild( tiltDn );
-  var tiltArrowDn  = createSVGElement( 'path' );
-  tiltArrowDn.setAttribute( 'd', 'M109,91 l13,-3 l-8,-9 L110,90 a40,40 0 0,0 20,-30 ' );
-  tiltArrowDn.setAttribute( 'stroke', 'black' );
-  tiltArrowDn.setAttribute( 'stroke-width', '2' );
-  tiltWrapper.appendChild( tiltArrowDn );
-  SVGelement = document.getElementById( 'tiltSlider' );
-  SVGelement.appendChild( tiltWrapper, SVGelement.lastChild );
+  $( "#rollSlider" ).slider({ min: 0, max: 360, change: rollChange, slide: rollChange});
+  $( "#tiltSlider" ).slider({ min: 0, max:  90, change: tiltChange, slide: tiltChange});
+  $( "#distSlider" ).slider({ min: 5, max: 30, change: distChange, slide: distChange});
+  updateSlider();
 }
 
+var globalInUpdateSlider = false;
 function updateSlider()
 {
-  var rollAngle = (roll * 180/Math.PI).toFixed(1);
-  var tiltAngle = (tilt * 180/Math.PI).toFixed(1);
-  var SVGelement = document.getElementById( 'rollSliderArrow' );
-  SVGelement.setAttribute( 'transform', 'rotate('+rollAngle+' 50 50)' );
-  SVGelement = document.getElementById( 'tiltSliderArrow' );
-  SVGelement.setAttribute( 'transform', 'rotate('+tiltAngle+' 10 90)' );
+  globalInUpdateSlider = true;
+  var rollAngle = (roll * 180/Math.PI);
+  var tiltAngle = (tilt * 180/Math.PI);
+  $( "#rollSlider" ).slider( "option", "value", rollAngle );
+  $( "#tiltSlider" ).slider( "option", "value", tiltAngle );
+  $( "#distSlider" ).slider( "option", "value", dist      );
+  globalInUpdateSlider = false;
 }
 
-function rollChange( delta ) 
-{
-  roll += delta;
-  if( roll > 2*Math.PI ) roll -= 2*Math.PI; 
-  if( roll < 0         ) roll += 2*Math.PI; 
-  updateSlider();
-  show25D( roll, tilt, plan );
-  replaceSVG( document.getElementById( 'top_level' ) );
+function rollChange( event, ui ) 
+{ 
+  if( globalInUpdateSlider ) return;
+  roll = ui.value * Math.PI / 180;
+  show3D( roll, tilt, plan );
 }
 
-function tiltChange( delta ) 
+function tiltChange( event, ui ) 
 {
-  tilt += delta;
-  if( tilt > 0.5*Math.PI ) tilt = 0.5*Math.PI; 
-  if( tilt < 0           ) tilt = 0;
-  updateSlider();
-  show25D( roll, tilt, plan );
-  replaceSVG( document.getElementById( 'top_level' ) );
+  if( globalInUpdateSlider ) return;
+  tilt = ui.value * Math.PI / 180;
+  show3D( roll, tilt, plan );
+}
+
+function distChange( event, ui ) 
+{
+  if( globalInUpdateSlider ) return;
+  dist = ui.value;
+  show3D( roll, tilt, plan );
 }

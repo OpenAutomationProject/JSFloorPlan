@@ -3,12 +3,19 @@
       xmlns:xlink="http://www.w3.org/1999/xlink"
       xml:lang="de">
   <head>
+  <meta charset="utf-8" />
+  <!--
   <object id="AdobeSVG" classid="clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2"></object>
   <?import namespace="svg" implementation="#AdobeSVG"?>
+  -->
   <title>JS Floor Plan</title>
 <!-- -->
+<script src="lib/jquery-1.7.1.min.js" type="text/javascript"></script>
+<script src="lib/jquery-ui-1.8.16.custom.min.js" type="text/javascript"></script>
+<script src="lib/Three.js" type="text/javascript"></script>
 <script src="jsfloorplan_example_helper.js" type="text/javascript"></script>
 <script src="jsfloorplan.js" type="text/javascript"></script>
+<link rel="stylesheet" type="text/css" href="css/ui-lightness/jquery-ui-1.8.16.custom.css" />
 <link rel="stylesheet" type="text/css" href="demo.css" />
 <!-- -->
 </head>
@@ -18,37 +25,19 @@
 <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 <h2>Plan:</h2>
 <!--
-<object id="top_level" data="generic_plan2.svg" width="600" height="300"
-type="image/svg+xml" name="object_name">ERROR: The browser does not support SVG!</object>
 -->
-<!--
-<iframe src="generic_plan2.svg" width="300" height="100">
-</iframe>
-  <svg:polygon points="10.0,10.0 10.0,200.0 200.0,200.0 200.0,10.0" style="stroke:black;stroke-width:5;" />
-  <svg:polygon points="10.0,10.0 10.0,200.0 200.0,200.0 200.0,10.0" />
- <svg:g fill="black" fill-opacity=".5" transform="matrix(1 1.5 0 1 50 50)">
- <svg:g transform="matrix(1 1.5 0 1 50 50)">
- <svg:g style="stroke:black;stroke-width:5;stroke-width=length;" >
- </svg:g>
-  <svg:image width="200" height="200" xlink:href="./textures/BodenGrau_1_3.jpg" transform="matrix(1 1.5 0 1 50 50)" />
- <svg:g stroke="black" stroke-width="5" >
- <svg:g>
-  <svg:image width="200" height="200" xlink:href="./textures/BodenGrau_1_3.jpg" transform="matrix(1 1.5 0 1 50 50)" />
-<svg:g transform="translate(50,50)">
-<svg:image width="200" height="200" xlink:href="./textures/Wand.jpg" transform="matrix(1, 0, 0, 1, 0, 0)"/>
- </svg:g>
- </svg:g>
--->
+<div id="top_level" style="border:1px black;width:800px;height:400px">
+</div>
 <table>
- <tr style="border: 1px black;"><td rowspan="2" style="border: 1px black;">
-<svg:svg width="800" height="400" id="top_level" style="border:1px black;">
-</svg:svg>
+ <tr style="border: 1px black;">
+ <td>
+   Rotation</td><td><div style="width:150px;" height="100" id="rollSlider"></div>
  </td>
  <td>
-   Rotation</td><td><svg:svg width="150" height="100" id="rollSlider"></svg:svg>
- </td></tr>
- <tr><td>
-   Kippen</td><td><svg:svg width="150" height="100" id="tiltSlider"></svg:svg>
+   Kippen</td><td><div style="width:150px;" height="100" id="tiltSlider"></div>
+ </td>
+ <td>
+   Entfernung</td><td><div style="width:150px;" height="100" id="distSlider"></div>
  </td></tr>
 </table>
 <hr />
