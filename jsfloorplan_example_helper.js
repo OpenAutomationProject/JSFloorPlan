@@ -232,7 +232,7 @@ function selectChange( name )
       
     case 'showWallLines':
       $( buildingProperties.floor ).each( function(){
-        THREE.SceneUtils.traverseHierarchy( this.wallGroup, function( object ) {
+        THREE.SceneUtils.traverseHierarchy( this.lineGroup, function( object ) {
           object.visible = showStates['showWallLines']; 
         });
       });
