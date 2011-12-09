@@ -51,7 +51,7 @@ var VIEW_ANGLE = 45,
 
 // create a WebGL renderer, camera
 // and a scene
-var renderer = new THREE.WebGLRenderer();
+var renderer = new THREE.WebGLRenderer({antialias: true});
 var camera = new THREE.PerspectiveCamera(
                    VIEW_ANGLE,
                    ASPECT,
@@ -113,6 +113,8 @@ var cube = new THREE.Mesh(
 cube.position = new THREE.Vector3(50,50,50);
 //scene.add( cube );
 
+var lineMaterial = new THREE.LineBasicMaterial( { color: 0x0099ff, linewidth: 2 } );
+ 
 // create a point light
 var pointLight = new THREE.PointLight( 0xFFFFFF );
 
@@ -200,6 +202,7 @@ function init()
 {
   $('input').change(function(e){
     showStates[ e.target.name ] = e.target.checked;
+    selectChange( e.target.name );
     show3D( roll, tilt );
   }).each(function(){
     showStates[ this.name ] = this.checked; // init
@@ -213,6 +216,28 @@ function init()
   
   loadFloorplan();
   createSlider();
+}
+
+function selectChange( name )
+{
+  switch( name )
+  {
+    case 'showNodes':
+      $( buildingProperties.floor ).each( function(){
+        THREE.SceneUtils.traverseHierarchy( this.nodeGroup, function( object ) {
+          object.visible = showStates['showNodes']; 
+        });
+      });
+      break;
+      
+    case 'showWallLines':
+      $( buildingProperties.floor ).each( function(){
+        THREE.SceneUtils.traverseHierarchy( this.wallGroup, function( object ) {
+          object.visible = showStates['showWallLines']; 
+        });
+      });
+      break;
+  }
 }
 
 var toggle = false;

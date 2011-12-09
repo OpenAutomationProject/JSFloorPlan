@@ -77,7 +77,6 @@ function loadFloorplan()
   $.get('floorplan01.xml', parseXMLFloorPlan, 'xml');
 }
 var floor;
-var floorCount = -1;
 
 // this array will contain all vertices to show in the svg
 var vertices = Array();
@@ -85,7 +84,7 @@ var vertices = Array();
 // the corresponding vertices
 var lines = Array();
 // infos about the building
-var buildingProperties = new Object;
+var buildingProperties = { floor: [], Object3D: new THREE.Object3D() };
 var imageCenter = new Object;
 
 var noFloorplan = true;
@@ -93,6 +92,9 @@ function parseXMLFloorPlan( xmlDoc )
 {
   noFloorplan = false;
 
+  var floorCount = -1;
+  var heightOfGround = 0; // the base level of the current floor
+  
   // basic check if the document seems right
   // this could be avoided if the XML file would be validated
   // with a DTD
@@ -120,9 +122,16 @@ function parseXMLFloorPlan( xmlDoc )
       return alert( "ERROR: Not a valid floor plan! " +
         "Expected: 'floor', found '" + floor.tagName + "'" );
     
-    var floorName = floor.getAttribute('name');
-    var floorheight = floor.getAttribute('height');
     floorCount++;
+    buildingProperties.floor[floorCount] = {};
+    
+    var floorName = floor.getAttribute('name');
+    buildingProperties.floor[floorCount].name = floorName;
+    
+    var floorheight = floor.getAttribute('height');
+    buildingProperties.floor[floorCount].height = floorheight;
+    buildingProperties.floor[floorCount].heightOfGround = heightOfGround;
+    
     lines[floorCount] = new Array;
    
     var floorWallsStart = floorWalls.length; 
@@ -153,6 +162,9 @@ function parseXMLFloorPlan( xmlDoc )
     // accessable objects
     // => derive the necessary information
 
+    // group all elements on this floor
+    var Object3D = new THREE.Object3D();
+    
     // add the information to each node to which nodes it's connected to
     for( var j = floorWallsStart; j < floorWalls.length; j++ )
     {
@@ -162,11 +174,19 @@ function parseXMLFloorPlan( xmlDoc )
       floorNodes[ floorWalls[j].start ].neighbour.push(  j+1 );
       floorNodes[ floorWalls[j].end   ].neighbour.push( -j-1 );
     }
+    
+    var nodeGroup = new THREE.Object3D(); nodeGroup.name = 'nodeGroup';
     for( var id in floorNodes )
     {
       // calculate the vectors showing to the neighbours
       var vectors = new Array();
       var start = floorNodes[id];
+      
+      // show them on request as spheres
+      var sphere = new THREE.Mesh( new THREE.SphereGeometry(0.1, 4, 4), sphereMaterial);
+      sphere.position = new THREE.Vector3( start.x, start.y, heightOfGround );
+      nodeGroup.add(sphere);    
+      
       for( var j=0; j<floorNodes[id].neighbour.length; j++ )
       {
 	var vec = new Object;
@@ -247,10 +267,19 @@ function parseXMLFloorPlan( xmlDoc )
         vertices.push( vertex );
       }
     } // end for( var id in floorNodes )
+    Object3D.add( nodeGroup );
 
     // show walls
+    var wallGroup = new THREE.Object3D(); wallGroup.name = 'wallGroup';
     for( var j = floorWallsStart; j<floorWalls.length; j++ )
     {
+      var vs = floorNodes[ floorWalls[j].start ];
+      var ve = floorNodes[ floorWalls[j].end   ];
+      var lineGeo = new THREE.Geometry(); 
+      lineGeo.vertices.push( new THREE.Vertex( new THREE.Vector3( vs.x, vs.y, heightOfGround ) ) ); 
+      lineGeo.vertices.push( new THREE.Vertex( new THREE.Vector3( ve.x, ve.y, heightOfGround ) ) ); 
+      wallGroup.add( new THREE.Line( lineGeo, lineMaterial ) );
+      
       var s1 = vertices[ floorWalls[j].startVertex[0] ];
       var e1 = vertices[ floorWalls[j].endVertex  [0] ];
       var s2 = vertices[ floorWalls[j].startVertex[1] ];
@@ -273,6 +302,14 @@ function parseXMLFloorPlan( xmlDoc )
         lines[floorCount].push( Array(floorWalls[j].startVertex[1],floorWalls[j].endVertex[1])  );
       }
     } // end for( j=0; j<floorWalls.length; j++ )
+    Object3D.add( wallGroup );
+    
+    buildingProperties.floor[floorCount].Object3D = Object3D;
+    buildingProperties.floor[floorCount].nodeGroup = nodeGroup;
+    buildingProperties.floor[floorCount].wallGroup = wallGroup;
+    buildingProperties.Object3D.add( Object3D ); // add / link; note: we use that JavaScript is not copying objects but uses ref counting on them here!
+    
+    heightOfGround += floorheight;
   }  // end floor
 
   buildingProperties.x_center =  (buildingProperties.x_max -  buildingProperties.x_min) / 2;
@@ -410,6 +447,8 @@ function setup3D()
   if( noFloorplan ) return;
   noSetup = false;
   
+  scene.add( buildingProperties.Object3D );
+  
   var showFloor = showStates.showFloor;
   
   for( var i=0; i<lines[showFloor].length; )
@@ -515,6 +554,10 @@ function setup3D()
    var $container = $('#top_level');
   // attach the render-supplied DOM element
   $container.append(renderer.domElement);
+  
+  // Init after the scene was set up
+  selectChange( 'showNodes'     );
+  selectChange( 'showWallLines' );
 }
 
 function show3D( rotation, tilt )
