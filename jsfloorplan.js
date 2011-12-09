@@ -80,9 +80,6 @@ var floor;
 
 // this array will contain all vertices to show in the svg
 var vertices = Array();
-// this array will contain all the lines to show by refencing
-// the corresponding vertices
-var lines = Array();
 // infos about the building
 var buildingProperties = { floor: [], Object3D: new THREE.Object3D() };
 var imageCenter = new Object;
@@ -132,8 +129,6 @@ function parseXMLFloorPlan( xmlDoc )
     buildingProperties.floor[floorCount].height = floorheight;
     buildingProperties.floor[floorCount].heightOfGround = heightOfGround;
     
-    lines[floorCount] = new Array;
-   
     var floorWallsStart = floorWalls.length; 
 
     // iterate over the content of this floor
@@ -289,35 +284,15 @@ function parseXMLFloorPlan( xmlDoc )
       var v1 = new Object; v1.x = s1.x-s2.x; v1.y = s1.y-s2.y; 
       var v2 = new Object; v2.x = e1.x-s2.x; v2.y = e1.y-s2.y;
       var v3 = new Object; v3.x = e1.x-e2.x; v3.y = e1.y-e2.y;
-      /*
       if( (v1.x*v2.y - v1.y*v2.x)*(v2.x*v3.y - v2.y*v3.x) > 0 )
       {
-        e1 = vertices[ floorWalls[j].endVertex  [1] ];
-        e2 = vertices[ floorWalls[j].endVertex  [0] ];
-        /////
-        lines[floorCount].push( Array(floorWalls[j].startVertex[0],floorWalls[j].endVertex[1])  );
-        lines[floorCount].push( Array(floorWalls[j].start         ,floorWalls[j].end         , floorWalls[j].thickness, floorWalls[j].texture, floorWalls[j].holes)  );
-        lines[floorCount].push( Array(floorWalls[j].startVertex[1],floorWalls[j].endVertex[0])  );
-      } else {
-        lines[floorCount].push( Array(floorWalls[j].startVertex[0],floorWalls[j].endVertex[0])  );
-        lines[floorCount].push( Array(floorWalls[j].start         ,floorWalls[j].end         , floorWalls[j].thickness, floorWalls[j].texture, floorWalls[j].holes)  );
-        lines[floorCount].push( Array(floorWalls[j].startVertex[1],floorWalls[j].endVertex[1])  );
+        e1 = vertices  [ floorWalls[j].endVertex[1] ];
+        e2 = vertices  [ floorWalls[j].endVertex[0] ];
       }
-      */
-      //#######################################
-      var s1 = vertices  [ floorWalls[j].startVertex[0] ];
-      var e1 = vertices  [ floorWalls[j].endVertex[1] ];
       var sm = floorNodes[ floorWalls[j].start ];
       var em = floorNodes[ floorWalls[j].end   ];
       var sh = floorNodes[ floorWalls[j].start ].z ; 
       var eh = floorNodes[ floorWalls[j].end   ].z ;
-      var s2 = vertices  [ floorWalls[j].startVertex[1] ];
-      var e2 = vertices  [ floorWalls[j].endVertex[0] ];
-      if( (v1.x*v2.y - v1.y*v2.x)*(v2.x*v3.y - v2.y*v3.x) < 0 )
-      {
-        e1 = vertices  [ floorWalls[j].endVertex[0] ];
-        e2 = vertices  [ floorWalls[j].endVertex[1] ];
-      }
       var wallSideOrder = (s2.x-s1.x)*(e1.y-s1.y) - (s2.y-s1.y)*(e1.x-s1.x);
       var geometry = new THREE.Geometry();
       
@@ -364,8 +339,6 @@ function parseXMLFloorPlan( xmlDoc )
       geometry.computeFaceNormals();
       var mesh = new THREE.Mesh(geometry, cubeMaterial);
       wallGroup.add(mesh);
-      
-      //#######################################
     } // end for( j=0; j<floorWalls.length; j++ )
     Object3D.add( lineGroup );
     Object3D.add( wallGroup );
