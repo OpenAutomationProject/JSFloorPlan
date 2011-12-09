@@ -94,102 +94,13 @@ function setXlinkAttribute( element, attribute, value )
   return element.setAttributeNS( XLINK_NS, attribute, value );
 }
 
-/*
-function newXMLHttpRequest() 
-{
-  try { return new XMLHttpRequest()                    } catch(e){}
-  try { return new ActiveXObject("MSXML3.XMLHTTP")     } catch(e){}
-  try { return new ActiveXObject("MSXML2.XMLHTTP.3.0") } catch(e){}
-  try { return new ActiveXObject("Msxml2.XMLHTTP")     } catch(e){}
-  try { return new ActiveXObject("Microsoft.XMLHTTP")  } catch(e){}
-  return null;
-}
-
-if (typeof(XMLHttpRequest) == 'undefined')
-{   
-  function XMLHttpRequest()
-  {   
-    try { return new ActiveXObject("MSXML3.XMLHTTP")     } catch(e){}   
-    try { return new ActiveXObject("MSXML2.XMLHTTP.3.0") } catch(e){}   
-    try { return new ActiveXObject("Msxml2.XMLHTTP")     } catch(e){}   
-    try { return new ActiveXObject("Microsoft.XMLHTTP")  } catch(e){}   
-    return null;   
-  };   
-} 
-*/
-
 /*******************************************************************/
 /* IE compatability stuff ends here                                */
 /*******************************************************************/
 
-var xmlDoc;
 function loadFloorplan()
 {
-  /*
-  var httpRequest = new newXMLHttpRequest();   
-  httpRequest.open("GET", "floorplan01.xml", false);   // don't open async
-
-  httpRequest.onreadystatechange = function() 
-  {   
-    var isLocal = (httpRequest.status == 0);   
-
-    if (httpRequest.readyState == 4 &&   
-      (httpRequest.status == 200 || isLocal)) 
-    {   
-      if (httpRequest.responseXML == null)   
-	// Mozilla failure, local or HTTP   
-	failure();   
-      else if(httpRequest.responseXML.document == null) 
-      {   
-	// IE   
-	if (!isLocal)  documentElement 
-	{
-	  // HTTP failure   
-	  failure();   
-        } else {   
-	  // Local failure--always happens, try   
-	  // using Microsoft.XMLDOM to load   
-	  xmlDoc = new ActiveXObject("Microsoft.XMLDOM");   
-	  xmlDoc.async = false;   
-	  xmlDoc.loadXML(httpRequest.responseText);   
-
-	  if (xmlDoc.documentElement != null)   
-	    success(xmlDoc);   
-	  else  
-	    failure();   
-	}   
-      } else { 
-	success(httpRequest.responseXML);   
-	//xmlDoc = httpRequest.responseXML;   
-      }
-    } else {
-      alert( "big fail; readystate: "+httpRequest.readyState+" status: "+httpRequest.status);
-    }
-  };  
-  httpRequest.send();
-  parseXMLFloorPlan();
-  */
-  // code for IE
-  /*
-  if (window.ActiveXObject)
-  {
-    xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
-  }
-  // code for Mozilla, Firefox, Opera, etc.
-  else if (document.implementation.createDocument)
-  {
-    xmlDoc=document.implementation.createDocument("","",null);
-  }
-  else
-  {
-    alert('Your browser cannot handle this script');
-  }
-  xmlDoc.async=false;
-  xmlDoc.onload = parseXMLFloorPlan;
-  xmlDoc.load("floorplan01.xml");
-  */
   $.get('floorplan01.xml', parseXMLFloorPlan, 'xml');
-  
 }
 var floor;
 var floorCount = -1;
@@ -401,9 +312,6 @@ function parseXMLFloorPlan( xmlDoc )
 
   show3D( 35*Math.PI/180, 30*Math.PI/180, plan );
   //document.getElementById( "top_level" ).appendChild( plan );
-  
-  // clean up and save space
-  delete xmlDoc;
 }
 
 var floorNodes = new Object(); 
@@ -974,16 +882,6 @@ function show3D( rotation, tilt, plan )
 {
   if( noSetup ) setup3D();
   
-  //var dist = 30;
-  /*
-  //camera.position.z = rotation * 180 / Math.PI;
-  //camera.rotation.z = rotation;
-  //camera.rotation.y = tilt;
-  camera.position.z = Math.sin(tilt) * dist;
-  camera.position.x = Math.cos(tilt) * dist * Math.sin(rotation);
-  camera.position.y = Math.cos(tilt) * dist * Math.cos(rotation);
-  */
-  //renderer.render(scene, camera);
   var cx = -Math.cos(rotation) * Math.cos(tilt);
   var cy =  Math.sin(rotation) * Math.cos(tilt);
   var cz =  Math.sin(tilt);
