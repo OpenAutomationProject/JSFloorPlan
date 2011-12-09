@@ -77,6 +77,7 @@ function vecSort( a, b )
 /*******************************************************************/
 /* IE compatability stuff starts here                              */
 /*******************************************************************/
+/*
 // Fix problems of IE that it doesn't support the
 // createElementNS method
 function createSVGElement( element )
@@ -93,6 +94,7 @@ function setXlinkAttribute( element, attribute, value )
 {
   return element.setAttributeNS( XLINK_NS, attribute, value );
 }
+*/
 
 /*******************************************************************/
 /* IE compatability stuff ends here                                */
@@ -120,7 +122,7 @@ function parseXMLFloorPlan( xmlDoc )
   noFloorplan = false;
   // create the SVG node where all elements are collected in
   //var plan = document.createElementNS( SVG_NS, "g" );
-  var plan = createSVGElement( "g" );
+  //var plan = createSVGElement( "g" );
 
   // basic check if the document seems right
   // this could be avoided if the XML file would be validated
@@ -310,7 +312,7 @@ function parseXMLFloorPlan( xmlDoc )
   imageCenter.y = buildingProperties.y_center;
   imageCenter.z = buildingProperties.z_max / 2;
 
-  show3D( 35*Math.PI/180, 30*Math.PI/180, plan );
+  show3D( 35*Math.PI/180, 30*Math.PI/180 );
   //document.getElementById( "top_level" ).appendChild( plan );
 }
 
@@ -458,6 +460,7 @@ function parseTextures( nodes )
   document.getElementById( "top_level" ).appendChild( defs );
 }
 
+/*
 //var wrapper = document.createElementNS( SVG_NS, "g" );
 var wrapper = createSVGElement( "g" );
 wrapper.setAttribute( "fill", fillColor );
@@ -474,6 +477,7 @@ poly_stroke.setAttribute( "style", "stroke:black;stroke-width:1;" );
 var poly_only = createSVGElement( "path" );
 var poly_clear = createSVGElement( "path" );
 poly_clear.setAttribute( "style", "stroke:none;fill:none;" );
+*/
 
 run_count = 5;
 // show the diagram in a 2.5D perspective, i.e. isometric
@@ -736,6 +740,7 @@ function show25D( rotation, tilt, plan )
   ////t_25d_end = new Date;
 }
 
+/*
 plan = createSVGElement( "g" );
 function replaceSVG( SVGelement )
 {
@@ -743,12 +748,15 @@ function replaceSVG( SVGelement )
   delete plan;
   plan = createSVGElement( "g" );
 }
+*/
 
 var noSetup = true;
 function setup3D()
 {
   if( noFloorplan ) return;
   noSetup = false;
+  
+  var showFloor = showStates.showFloor;
   
   for( var i=0; i<lines[showFloor].length; )
   {
@@ -878,7 +886,7 @@ function setup3D()
  
 }
 
-function show3D( rotation, tilt, plan )
+function show3D( rotation, tilt )
 {
   if( noSetup ) setup3D();
   
