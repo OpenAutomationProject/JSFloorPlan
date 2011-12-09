@@ -128,7 +128,7 @@ function parseXMLFloorPlan( xmlDoc )
     var floorName = floor.getAttribute('name');
     buildingProperties.floor[floorCount].name = floorName;
     
-    var floorheight = floor.getAttribute('height');
+    var floorheight = Number( floor.getAttribute('height') );
     buildingProperties.floor[floorCount].height = floorheight;
     buildingProperties.floor[floorCount].heightOfGround = heightOfGround;
     
@@ -268,8 +268,9 @@ function parseXMLFloorPlan( xmlDoc )
       }
     } // end for( var id in floorNodes )
     Object3D.add( nodeGroup );
-
+    
     // show walls
+    var lineGroup = new THREE.Object3D(); lineGroup.name = 'lineGroup';
     var wallGroup = new THREE.Object3D(); wallGroup.name = 'wallGroup';
     for( var j = floorWallsStart; j<floorWalls.length; j++ )
     {
@@ -278,7 +279,7 @@ function parseXMLFloorPlan( xmlDoc )
       var lineGeo = new THREE.Geometry(); 
       lineGeo.vertices.push( new THREE.Vertex( new THREE.Vector3( vs.x, vs.y, heightOfGround ) ) ); 
       lineGeo.vertices.push( new THREE.Vertex( new THREE.Vector3( ve.x, ve.y, heightOfGround ) ) ); 
-      wallGroup.add( new THREE.Line( lineGeo, lineMaterial ) );
+      lineGroup.add( new THREE.Line( lineGeo, lineMaterial ) );
       
       var s1 = vertices[ floorWalls[j].startVertex[0] ];
       var e1 = vertices[ floorWalls[j].endVertex  [0] ];
@@ -288,6 +289,7 @@ function parseXMLFloorPlan( xmlDoc )
       var v1 = new Object; v1.x = s1.x-s2.x; v1.y = s1.y-s2.y; 
       var v2 = new Object; v2.x = e1.x-s2.x; v2.y = e1.y-s2.y;
       var v3 = new Object; v3.x = e1.x-e2.x; v3.y = e1.y-e2.y;
+      /*
       if( (v1.x*v2.y - v1.y*v2.x)*(v2.x*v3.y - v2.y*v3.x) > 0 )
       {
         e1 = vertices[ floorWalls[j].endVertex  [1] ];
@@ -301,11 +303,76 @@ function parseXMLFloorPlan( xmlDoc )
         lines[floorCount].push( Array(floorWalls[j].start         ,floorWalls[j].end         , floorWalls[j].thickness, floorWalls[j].texture, floorWalls[j].holes)  );
         lines[floorCount].push( Array(floorWalls[j].startVertex[1],floorWalls[j].endVertex[1])  );
       }
+      */
+      //#######################################
+      var s1 = vertices  [ floorWalls[j].startVertex[0] ];
+      var e1 = vertices  [ floorWalls[j].endVertex[1] ];
+      var sm = floorNodes[ floorWalls[j].start ];
+      var em = floorNodes[ floorWalls[j].end   ];
+      var sh = floorNodes[ floorWalls[j].start ].z ; 
+      var eh = floorNodes[ floorWalls[j].end   ].z ;
+      var s2 = vertices  [ floorWalls[j].startVertex[1] ];
+      var e2 = vertices  [ floorWalls[j].endVertex[0] ];
+      if( (v1.x*v2.y - v1.y*v2.x)*(v2.x*v3.y - v2.y*v3.x) < 0 )
+      {
+        e1 = vertices  [ floorWalls[j].endVertex[0] ];
+        e2 = vertices  [ floorWalls[j].endVertex[1] ];
+      }
+      var wallSideOrder = (s2.x-s1.x)*(e1.y-s1.y) - (s2.y-s1.y)*(e1.x-s1.x);
+      var geometry = new THREE.Geometry();
+      
+      //geometry.faceVertexUvs[0].push([
+      //  new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value))
+      //]);
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,heightOfGround     )));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,heightOfGround + sh)));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s1.x,s1.y,heightOfGround     )));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s1.x,s1.y,heightOfGround + sh)));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(sm.x,sm.y,heightOfGround + sh)));
+      
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s2.x,s2.y,heightOfGround     )));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s2.x,s2.y,heightOfGround + sh)));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e2.x,e2.y,heightOfGround     )));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e2.x,e2.y,heightOfGround + sh)));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(em.x,em.y,heightOfGround + sh)));
+      
+      if( wallSideOrder < 0 )
+      {
+        // Add the wall sides
+        geometry.faces.push(new THREE.Face3( 0, 1, 2 ));
+        geometry.faces.push(new THREE.Face3( 3, 2, 1 ));
+        geometry.faces.push(new THREE.Face3( 5, 6, 7 ));
+        geometry.faces.push(new THREE.Face3( 8, 7, 6 ));
+        // Add the wall tops
+        geometry.faces.push(new THREE.Face3( 4, 3, 6 ));
+        geometry.faces.push(new THREE.Face3( 1, 6, 3 ));
+        geometry.faces.push(new THREE.Face3( 6, 1, 8 ));
+        geometry.faces.push(new THREE.Face3( 9, 8, 1 ));
+      } else { 
+        // Add the wall sides
+        geometry.faces.push(new THREE.Face3( 0, 2, 1 ));
+        geometry.faces.push(new THREE.Face3( 3, 1, 2 ));
+        geometry.faces.push(new THREE.Face3( 5, 7, 6 ));
+        geometry.faces.push(new THREE.Face3( 8, 6, 7 ));
+        // Add the wall tops
+        geometry.faces.push(new THREE.Face3( 4, 6, 3 ));
+        geometry.faces.push(new THREE.Face3( 1, 3, 6 ));
+        geometry.faces.push(new THREE.Face3( 6, 8, 1 ));
+        geometry.faces.push(new THREE.Face3( 9, 1, 8 ));
+      }
+      
+      geometry.computeFaceNormals();
+      var mesh = new THREE.Mesh(geometry, cubeMaterial);
+      wallGroup.add(mesh);
+      
+      //#######################################
     } // end for( j=0; j<floorWalls.length; j++ )
+    Object3D.add( lineGroup );
     Object3D.add( wallGroup );
     
     buildingProperties.floor[floorCount].Object3D = Object3D;
     buildingProperties.floor[floorCount].nodeGroup = nodeGroup;
+    buildingProperties.floor[floorCount].lineGroup = lineGroup;
     buildingProperties.floor[floorCount].wallGroup = wallGroup;
     buildingProperties.Object3D.add( Object3D ); // add / link; note: we use that JavaScript is not copying objects but uses ref counting on them here!
     
@@ -333,7 +400,7 @@ function parseFloorNodes( nodes, floorheight )
     var point = new Object;
     point.x  = Number( node.getAttribute('x') );
     point.y  = Number( node.getAttribute('y') );
-    point.z  = node.hasAttribute('z') ? Number( node.getAttribute('z') ) : floorheight;
+    point.z  = Number( node.hasAttribute('z') ? node.getAttribute('z') : floorheight );
     point.neighbour = new Array;
 
     floorNodes[id] = point;
@@ -450,102 +517,6 @@ function setup3D()
   scene.add( buildingProperties.Object3D );
   
   var showFloor = showStates.showFloor;
-  
-  for( var i=0; i<lines[showFloor].length; )
-  {
-    /*
-    var s1 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][  i][0] ], imageCenter );
-    var e1 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][  i][1] ], imageCenter );
-    var sm = rotate2D( rot_s, rot_c, floorNodes[ lines[showFloor][++i][1] ], imageCenter );
-    var em = rotate2D( rot_s, rot_c, floorNodes[ lines[showFloor][  i][0] ], imageCenter );
-    var sh = v_short * floorNodes[ lines[showFloor][i][1] ].z; 
-    var eh = v_short * floorNodes[ lines[showFloor][i][0] ].z;
-    var thickness = lines[showFloor][  i][2];
-    var texture   = lines[showFloor][  i][3];
-    var holes     = lines[showFloor][  i][4];
-    var s2 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][++i][0] ], imageCenter );
-    var e2 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][  i][1] ], imageCenter );
-    */
-    var s1 = vertices  [ lines[showFloor][  i][0] ];
-    var e1 = vertices  [ lines[showFloor][  i][1] ];
-    var sm = floorNodes[ lines[showFloor][++i][1] ];
-    var em = floorNodes[ lines[showFloor][  i][0] ];
-//    var sh = 2.44;//floorNodes[ lines[showFloor][i][1] ].z ; 
-//    var eh = 2.44;//floorNodes[ lines[showFloor][i][0] ].z ;
-    var sh = floorNodes[ lines[showFloor][i][1] ].z ; 
-    var eh = floorNodes[ lines[showFloor][i][0] ].z ;
-    var s2 = vertices  [ lines[showFloor][++i][0] ];
-    var e2 = vertices  [ lines[showFloor][  i][1] ];
-    ++i;
-    var wallSideOrder = (s2.x-s1.x)*(e1.y-s1.y) - (s2.y-s1.y)*(e1.x-s1.x);
-    //var Tvertices = [];
-    
-    /**************
-    var sphere = new THREE.Mesh( new THREE.SphereGeometry(0.1, 4, 4), sphereMaterial);
-    sphere.position = new THREE.Vector3(sm.x,sm.y,0);
-    //Tvertices.push(sphere.position);
-    scene.add(sphere);    
-    var sphere = new THREE.Mesh( new THREE.SphereGeometry(0.1, 4, 4), sphereMaterial);
-    sphere.position = new THREE.Vector3(sm.x,sm.y,sh);
-    //Tvertices.push(sphere.position);
-    scene.add(sphere);    
-    var sphere = new THREE.Mesh( new THREE.SphereGeometry(0.1, 4, 4), sphereMaterial);
-    sphere.position = new THREE.Vector3(em.x,em.y,0);
-    //Tvertices.push(sphere.position);
-    scene.add(sphere);    
-    var sphere = new THREE.Mesh( new THREE.SphereGeometry(0.1, 4, 4), sphereMaterial);
-    sphere.position = new THREE.Vector3(em.x,em.y,eh);
-    //Tvertices.push(sphere.position);
-    scene.add(sphere);    
-    */
-    var geometry = new THREE.Geometry();
-
-    //geometry.faceVertexUvs[0].push([
-    //  new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value))
-    //]);
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,0)));
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,sh)));
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s1.x,s1.y,0)));
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s1.x,s1.y,sh)));
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(sm.x,sm.y,sh)));
-    
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s2.x,s2.y,0)));
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s2.x,s2.y,sh)));
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e2.x,e2.y,0)));
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e2.x,e2.y,sh)));
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(em.x,em.y,sh)));
-    
-    if( wallSideOrder < 0 )
-    {
-      // Add the wall sides
-      geometry.faces.push(new THREE.Face3( 0, 1, 2 ));
-      geometry.faces.push(new THREE.Face3( 3, 2, 1 ));
-      geometry.faces.push(new THREE.Face3( 5, 6, 7 ));
-      geometry.faces.push(new THREE.Face3( 8, 7, 6 ));
-      // Add the wall tops
-      geometry.faces.push(new THREE.Face3( 4, 3, 6 ));
-      geometry.faces.push(new THREE.Face3( 1, 6, 3 ));
-      geometry.faces.push(new THREE.Face3( 6, 1, 8 ));
-      geometry.faces.push(new THREE.Face3( 9, 8, 1 ));
-    } else { 
-      // Add the wall sides
-      geometry.faces.push(new THREE.Face3( 0, 2, 1 ));
-      geometry.faces.push(new THREE.Face3( 3, 1, 2 ));
-      geometry.faces.push(new THREE.Face3( 5, 7, 6 ));
-      geometry.faces.push(new THREE.Face3( 8, 6, 7 ));
-      // Add the wall tops
-      geometry.faces.push(new THREE.Face3( 4, 6, 3 ));
-      geometry.faces.push(new THREE.Face3( 1, 3, 6 ));
-      geometry.faces.push(new THREE.Face3( 6, 8, 1 ));
-      geometry.faces.push(new THREE.Face3( 9, 1, 8 ));
-    }
-    
-    
-    geometry.computeFaceNormals();
-    //var mesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial());
-    var mesh = new THREE.Mesh(geometry, cubeMaterial);
-    scene.add(mesh);
-  }
   
   ///////////
   scene.add(pointLight);
