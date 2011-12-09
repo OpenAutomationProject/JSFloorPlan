@@ -25,8 +25,6 @@
 // setup script here:
 
 // don't change anything below:
-var SVG_NS ="http://www.w3.org/2000/svg";
-var XLINK_NS ="http://www.w3.org/1999/xlink";
 var ELEMENT_NODE = 1;
 
 // calculate the distance between two cartesian 2D points
@@ -74,32 +72,6 @@ function vecSort( a, b )
   return pseudoangle_a - pseudoangle_b; 
 }
 
-/*******************************************************************/
-/* IE compatability stuff starts here                              */
-/*******************************************************************/
-/*
-// Fix problems of IE that it doesn't support the
-// createElementNS method
-function createSVGElement( element )
-{
-  if( typeof document.createElementNS != 'undefined' )
-    return document.createElementNS( SVG_NS, element );
-
-  if( typeof document.createElement   != 'undefined' )
-    return document.createElement (element );
-
-  return false;
-}
-function setXlinkAttribute( element, attribute, value )
-{
-  return element.setAttributeNS( XLINK_NS, attribute, value );
-}
-*/
-
-/*******************************************************************/
-/* IE compatability stuff ends here                                */
-/*******************************************************************/
-
 function loadFloorplan()
 {
   $.get('floorplan01.xml', parseXMLFloorPlan, 'xml');
@@ -120,9 +92,6 @@ var noFloorplan = true;
 function parseXMLFloorPlan( xmlDoc )
 {
   noFloorplan = false;
-  // create the SVG node where all elements are collected in
-  //var plan = document.createElementNS( SVG_NS, "g" );
-  //var plan = createSVGElement( "g" );
 
   // basic check if the document seems right
   // this could be avoided if the XML file would be validated
@@ -313,7 +282,6 @@ function parseXMLFloorPlan( xmlDoc )
   imageCenter.z = buildingProperties.z_max / 2;
 
   show3D( 35*Math.PI/180, 30*Math.PI/180 );
-  //document.getElementById( "top_level" ).appendChild( plan );
 }
 
 var floorNodes = new Object(); 
@@ -429,326 +397,12 @@ function parseFloorRooms( nodes, floor )
 function parseTextures( nodes )
 {
   return;
-  var defs = createSVGElement( 'defs' );
   for( var i=0; i < nodes.childNodes.length; i++ )
   {
     node = nodes.childNodes[i];
     if (node.nodeType != ELEMENT_NODE) continue;
-    
-    var pattern = createSVGElement( 'pattern' );
-    pattern.setAttribute( 'id', node.getAttribute('id') );
-    pattern.setAttribute( 'x', 0 );
-    pattern.setAttribute( 'y', 0 );
-    pattern.setAttribute( 'width',  Number( node.getAttribute('width' ) )*200 );
-    pattern.setAttribute( 'height', Number( node.getAttribute('height') )*200 );
-    /*
-    textures[id] = new Object();
-    textures[id].width  = Number( node.getAttribute('width' ) );
-    textures[id].height = Number( node.getAttribute('height') );
-    textures[id].src    = node.getAttribute('src' );
-    textures[id].svg    = createSVGElement( "image" );
-    */
-    var texture = createSVGElement( "image" );
-    texture.setAttribute( "width",  Number( node.getAttribute('width' ) )*200 );
-    texture.setAttribute( "height", Number( node.getAttribute('height') )*200 );
-    setXlinkAttribute( texture, "href", node.getAttribute('src')  );
-    //textures[id].setAttribute( "href", node.getAttribute('src')  );
-
-    pattern.appendChild( texture );
-    defs.appendChild( pattern );
   }
-  document.getElementById( "top_level" ).appendChild( defs );
 }
-
-/*
-//var wrapper = document.createElementNS( SVG_NS, "g" );
-var wrapper = createSVGElement( "g" );
-wrapper.setAttribute( "fill", fillColor );
-wrapper.setAttribute( "fill-opacity", fillOpacity );
-wrapper.setAttribute( "fill", "grey" );
-////wrapper.setAttribute( "stroke", "black" );
-////wrapper.setAttribute( "stroke-width", "1" );
-wrapper.setAttribute( "onmouseover", 'set_color(this);' );
-wrapper.setAttribute( "onmouseout", 'unset_color(this,"grey");' );
-wrapper.setAttribute( "transform", 'translate(400,200)' );
-
-var poly_stroke = createSVGElement( "path" );
-poly_stroke.setAttribute( "style", "stroke:black;stroke-width:1;" );
-var poly_only = createSVGElement( "path" );
-var poly_clear = createSVGElement( "path" );
-poly_clear.setAttribute( "style", "stroke:none;fill:none;" );
-*/
-
-run_count = 5;
-// show the diagram in a 2.5D perspective, i.e. isometric
-function show25D( rotation, tilt, plan )
-{
-  ////t_25d_start = new Date;
-  //console.log( rotation, tilt, plan );
-  return;
-
-  var h_short = Math.cos( tilt ); // horizontal shortening factor
-  var v_short = Math.sin( tilt ); // vertical shortening factor
-  var x_offset = -imageCenter.x * sc;
-  var y_offset = (imageCenter.z *v_short- imageCenter.y* h_short) * sc; // correct tilt
-
-  // to reduce the amount of trigonometric calls: pre calculate them
-  var rot_s = Math.sin( rotation );
-  var rot_c = Math.cos( rotation );
-
-  // depth sorting of the elements
-  var order = new Array;
-  for( var i=1; i<lines[showFloor].length; i+=3 )
-  {
-    order.push( Array( i, 
-      rot_s * floorNodes[ lines[showFloor][i][0] ].x + rot_c * floorNodes[ lines[showFloor][i][0] ].y +
-      rot_s * floorNodes[ lines[showFloor][i][1] ].x + rot_c * floorNodes[ lines[showFloor][i][1] ].y
-    ));
-  }
-  order.sort( function(a,b){ return a[1]-b[1]; } );
-  ////t_25d_after_sort = new Date;
-
-  for( var o=0; o<order.length; o++ )
-  {
-    var i = order[o][0]-1;
-    
-    var s1 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][  i][0] ], imageCenter );
-    var e1 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][  i][1] ], imageCenter );
-    var sm = rotate2D( rot_s, rot_c, floorNodes[ lines[showFloor][++i][1] ], imageCenter );
-    var em = rotate2D( rot_s, rot_c, floorNodes[ lines[showFloor][  i][0] ], imageCenter );
-    var sh = v_short * floorNodes[ lines[showFloor][i][1] ].z; 
-    var eh = v_short * floorNodes[ lines[showFloor][i][0] ].z;
-    var thickness = lines[showFloor][  i][2];
-    var texture   = lines[showFloor][  i][3];
-    var holes     = lines[showFloor][  i][4];
-    var s2 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][++i][0] ], imageCenter );
-    var e2 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][  i][1] ], imageCenter );
-  
-    var wallSideOrder = (s1.y*e1.x-s1.x*e1.y)*(e2.x-s2.x) - (s2.y*e2.x-s2.x*e2.y)*(e1.x-s1.x);
-
-    var w = wrapper.cloneNode( true );
-
-    // disable the textures as they are causing big troubles (at least
-    // with FF3.0) in this implementation
-    if( false && texture != 0 ) // showTextures
-    {
-      var img = poly_only.cloneNode( true );
-      img.setAttribute( 'fill', 'url(#' + texture + ')' );
-      img.setAttribute( "points", 
-        e1.x*sc + ',' + (e1.y*h_short+eh)*sc + ' ' + 
-        s1.x*sc + ',' + (s1.y*h_short+sh)*sc + ' ' + 
-        s1.x*sc + ',' + s1.y*h_short*sc  + ' ' + 
-	e1.x*sc + ',' + e1.y*h_short*sc  );
-      var wi = 200; //textures[texture].width;
-      var he = 200; //textures[texture].height;
-      var ma = ((s1.x)-(s1.x))*sc/he;
-      var mb = ((s1.y*h_short+sh)-(s1.y*h_short))*sc/he;
-      var mc = ((e1.x)-(s1.x))*sc/wi;
-      var md = ((e1.y)-(s1.y))*h_short*sc/wi;
-      var me = s1.x*sc;
-      var mf = s1.y*h_short*sc;
-      img.setAttribute( "transformX", "matrix(" +
-        ma.toFixed(3) + ' ' + mb.toFixed(3) + ' ' +
-        mc.toFixed(3) + ' ' + md.toFixed(3) + ' ' +
-        me.toFixed(3) + ' ' + mf.toFixed(3) + ')');
-      w.appendChild( img );
-    }
-
-    var h = new Array;
-    for( var j=0; j < holes.length; j++ )
-    {
-      h[j] = new Object;
-      var wallLength = calcLength2D( sm, em );
-      var fLeft  =  holes[j].distance                   / wallLength;
-      var fRight = (holes[j].distance + holes[j].width) / wallLength;
-      var normal_x = +(sm.y - em.y) / wallLength * thickness / 2;
-      var normal_y = -(sm.x - em.x) / wallLength * thickness / 2;
-      var xLeft  = sm.x * fLeft  + em.x * (1 - fLeft ); 
-      var xRight = sm.x * fRight + em.x * (1 - fRight); 
-      var yLeft  = sm.y * fLeft  + em.y * (1 - fLeft ); 
-      var yRight = sm.y * fRight + em.y * (1 - fRight); 
-      var lintel  = sh - holes[j].lintel * v_short;
-      var paparet = holes[j].paparet * v_short;
-
-      h[j].tl1_x = ( ( xLeft  - normal_x                 )*sc+x_offset).toFixed(1);
-      h[j].tr1_x = ( ( xRight - normal_x                 )*sc+x_offset).toFixed(1);
-      h[j].tl1_y = ( ((yLeft  - normal_y)*h_short-lintel )*sc+y_offset).toFixed(1);
-      h[j].tr1_y = ( ((yRight - normal_y)*h_short-lintel )*sc+y_offset).toFixed(1);
-      h[j].bl1_y = ( ((yLeft  - normal_y)*h_short-paparet)*sc+y_offset).toFixed(1);
-      h[j].br1_y = ( ((yRight - normal_y)*h_short-paparet)*sc+y_offset).toFixed(1);
-      h[j].tl2_x = ( ( xLeft  + normal_x                 )*sc+x_offset).toFixed(1);
-      h[j].tr2_x = ( ( xRight + normal_x                 )*sc+x_offset).toFixed(1);
-      h[j].tl2_y = ( ((yLeft  + normal_y)*h_short-lintel )*sc+y_offset).toFixed(1);
-      h[j].tr2_y = ( ((yRight + normal_y)*h_short-lintel )*sc+y_offset).toFixed(1);
-      h[j].bl2_y = ( ((yLeft  + normal_y)*h_short-paparet)*sc+y_offset).toFixed(1);
-      h[j].br2_y = ( ((yRight + normal_y)*h_short-paparet)*sc+y_offset).toFixed(1);
-    }
-
-    // note: don't pass the full float precision to the SVG as the
-    // conversion time float -> text -> float can take a significant time...
-    var e1_y_fh = ((e1.y * h_short - eh) * sc +y_offset).toFixed(1);
-    var s1_y_fh = ((s1.y * h_short - sh) * sc +y_offset).toFixed(1);
-    var em_y_fh = ((em.y * h_short - eh) * sc +y_offset).toFixed(1);
-    var sm_y_fh = ((sm.y * h_short - sh) * sc +y_offset).toFixed(1);
-    var e2_y_fh = ((e2.y * h_short - eh) * sc +y_offset).toFixed(1);
-    var s2_y_fh = ((s2.y * h_short - sh) * sc +y_offset).toFixed(1);
-    s1.y = (s1.y * h_short * sc+y_offset).toFixed(2); s1.x = (s1.x * sc+x_offset).toFixed(2);
-    e1.y = (e1.y * h_short * sc+y_offset).toFixed(2); e1.x = (e1.x * sc+x_offset).toFixed(2);
-    sm.y = (sm.y * h_short * sc+y_offset).toFixed(2); sm.x = (sm.x * sc+x_offset).toFixed(2);
-    em.y = (em.y * h_short * sc+y_offset).toFixed(2); em.x = (em.x * sc+x_offset).toFixed(2);
-    s2.y = (s2.y * h_short * sc+y_offset).toFixed(2); s2.x = (s2.x * sc+x_offset).toFixed(2);
-    e2.y = (e2.y * h_short * sc+y_offset).toFixed(2); e2.x = (e2.x * sc+x_offset).toFixed(2);
-    if( showWallSides ) // the sides of the walls
-    {
-      var path1 =
-        'M' + e1.x + ',' + (e1_y_fh) + 
-        'L' + s1.x + ',' + (s1_y_fh) +
-        'L' + s1.x + ',' + s1.y  +
-	'L' + e1.x + ',' + e1.y + 'z';
-      for( var j=0; showHoles && j < h.length; j++ )
-      {
-        path1 +=
-        'M' + h[j].tl1_x + ',' + h[j].tl1_y +
-        'L' + h[j].tl1_x + ',' + h[j].bl1_y +
-        'L' + h[j].tr1_x + ',' + h[j].br1_y +
-	'L' + h[j].tr1_x + ',' + h[j].tr1_y + 'z';
-      }
-      var path2 = 
-        'M' + e2.x + ',' + (e2_y_fh) +
-        'L' + s2.x + ',' + (s2_y_fh) +
-        'L' + s2.x + ',' + s2.y +
-	'L' + e2.x + ',' + e2.y + 'z';
-      for( var j=0; showHoles && j < h.length; j++ )
-      {
-        path2 +=
-        'M' + h[j].tl2_x + ',' + h[j].tl2_y +
-        'L' + h[j].tl2_x + ',' + h[j].bl2_y +
-        'L' + h[j].tr2_x + ',' + h[j].br2_y +
-	'L' + h[j].tr2_x + ',' + h[j].tr2_y + 'z';
-      }
-      var path3 = '';
-      for( var j=0; showHoles && j < h.length; j++ )
-      {
-        if( wallSideOrder > 0 )
-        {
-          path3 +=
-            'M' + h[j].tr1_x + ',' + h[j].tr1_y + 'L' + h[j].tr2_x + ',' + h[j].tr2_y +
-            'L' + h[j].tl2_x + ',' + h[j].tl2_y + 'L' + h[j].tl1_x + ',' + h[j].tl1_y +'z'+
-            'M' + h[j].tr1_x + ',' + h[j].br1_y + 'L' + h[j].tr2_x + ',' + h[j].br2_y +
-            'L' + h[j].tr2_x + ',' + h[j].tr2_y + 'L' + h[j].tr1_x + ',' + h[j].tr1_y +'z'+
-            'M' + h[j].tl1_x + ',' + h[j].bl1_y + 'L' + h[j].tl2_x + ',' + h[j].bl2_y +
-  	    'L' + h[j].tr2_x + ',' + h[j].br2_y + 'L' + h[j].tr1_x + ',' + h[j].br1_y +'z'+
-    	    'M' + h[j].tl1_x + ',' + h[j].tl1_y + 'L' + h[j].tl2_x + ',' + h[j].tl2_y +
-            'L' + h[j].tl2_x + ',' + h[j].bl2_y + 'L' + h[j].tl1_x + ',' + h[j].bl1_y +'z';
-        } else {
-          path3 +=
-            'M' + h[j].tl1_x + ',' + h[j].tl1_y + 'L' + h[j].tl2_x + ',' + h[j].tl2_y +
-            'L' + h[j].tr2_x + ',' + h[j].tr2_y + 'L' + h[j].tr1_x + ',' + h[j].tr1_y +'z'+
-            'M' + h[j].tr1_x + ',' + h[j].tr1_y + 'L' + h[j].tr2_x + ',' + h[j].tr2_y +
-            'L' + h[j].tr2_x + ',' + h[j].br2_y + 'L' + h[j].tr1_x + ',' + h[j].br1_y +'z'+
-            'M' + h[j].tr1_x + ',' + h[j].br1_y + 'L' + h[j].tr2_x + ',' + h[j].br2_y +
-  	    'L' + h[j].tl2_x + ',' + h[j].bl2_y + 'L' + h[j].tl1_x + ',' + h[j].bl1_y +'z'+
-  	    'M' + h[j].tl1_x + ',' + h[j].bl1_y + 'L' + h[j].tl2_x + ',' + h[j].bl2_y +
-            'L' + h[j].tl2_x + ',' + h[j].tl2_y + 'L' + h[j].tl1_x + ',' + h[j].tl1_y +'z';
-        }
-      }
-
-      var frontPath;
-      var backPath;
-      // backside culling:
-      if( wallSideOrder < 0 )
-      {
-        frontPath = path2;
-        backPath  = path1;
-        /*if( showBackside )
-          path = path1;
-        path += path2;*/
-      } else {
-        frontPath = path1;
-        backPath  = path2;
-        /*if( showBackside )
-          path = path2;
-        path += path1;*/
-      }
-      if( !showBackside )
-      {
-        backPath = '';
-      }
-      backPath += path3;
-        var wall  = showSideLines ? poly_stroke.cloneNode( true ) 
-                                  : poly_only.cloneNode( true ) ;
-        wall.setAttribute( 'd', backPath );
-        w.appendChild( wall );
-      var wall  = showSideLines ? poly_stroke.cloneNode( true ) 
-                                : poly_only.cloneNode( true ) ;
-      wall.setAttribute( 'd', frontPath );
-      w.appendChild( wall );
-    }
-    if( showWallTop ) // the top of the walls
-    {
-      var rect3 = showTopLines ? poly_stroke.cloneNode( true ) : poly_only.cloneNode( true ) ;
-      rect3.setAttribute( 'd', 
-	'M' + sm.x + ',' + sm_y_fh +
-	'L' + s1.x + ',' + s1_y_fh +
-	'L' + e1.x + ',' + e1_y_fh +
-	'L' + em.x + ',' + em_y_fh +
-	'L' + e2.x + ',' + e2_y_fh +
-	'L' + s2.x + ',' + s2_y_fh + 'z' );
-      w.appendChild( rect3 );
-    }
-    plan.appendChild( w );
- 
-    // clean up, so that the garbage collector doesn't bite us
-    delete s1;
-    delete e1;
-    delete sm;
-    delete em;
-    delete s2;
-    delete e2;
-    delete h;
-  } // end for( o=0; o<order.length; o++ )
-
-  // show zones
-  if( showZones )
-  {
-    var w = wrapper.cloneNode( true );
-    for( j=0; j<rooms[showFloor].length; j++ )
-    {
-      for( var k=0; k<rooms[showFloor][j].zones.length; k++ )
-      {
-        var area = showVisibleZones ? poly_stroke.cloneNode( true ) 
-                                    : poly_clear.cloneNode( true ) ;
-        var points = '';
-        for( var l=0; l<rooms[showFloor][j].zones[k].corners.length; l++ )
-        {
-          n = rooms[showFloor][j].zones[k].corners[l];
-          var p = rotate2D( rot_s, rot_c, floorNodes[n], imageCenter );
-          var h = v_short * floorNodes[n].z; 
-          p.y = ((p.y * h_short - h) * sc +y_offset).toFixed(2);
-          p.x = (p.x * sc+x_offset).toFixed(2);
-          points += (( 0 == l ) ? 'M' : 'L') + p.x + ',' + p.y;
-        }
-        area.setAttribute( 'd', points+'z' );
-        if( rooms[showFloor][j].zones[k].onclick )
-          area.setAttribute( 'onclick', rooms[showFloor][j].zones[k].onclick );
-        w.appendChild( area );
-      }
-    }
-    plan.appendChild( w );
-  } //if( showZones )
-  
-  ////t_25d_end = new Date;
-}
-
-/*
-plan = createSVGElement( "g" );
-function replaceSVG( SVGelement )
-{
-  SVGelement.replaceChild( plan, SVGelement.lastChild );
-  delete plan;
-  plan = createSVGElement( "g" );
-}
-*/
 
 var noSetup = true;
 function setup3D()
@@ -760,7 +414,6 @@ function setup3D()
   
   for( var i=0; i<lines[showFloor].length; )
   {
-    //console.log(i);
     /*
     var s1 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][  i][0] ], imageCenter );
     var e1 = rotate2D( rot_s, rot_c, vertices  [ lines[showFloor][  i][1] ], imageCenter );
@@ -808,25 +461,9 @@ function setup3D()
     */
     var geometry = new THREE.Geometry();
 
-//var vertices = [];
-//vertices.push(new THREE.Vector3(0, 0, 0));
-//vertices.push(new THREE.Vector3(1, 0, 0));
-//vertices.push(new THREE.Vector3(0, 1, 0));
-    /*
-    for ( j = 0; j < vertices.length; j = j + 4) {
-      geometry.vertices.push(new THREE.Vertex(Tvertices[j]));
-      geometry.vertices.push(new THREE.Vertex(Tvertices[j+1]));
-      geometry.vertices.push(new THREE.Vertex(Tvertices[j+2]));
-      geometry.vertices.push(new THREE.Vertex(Tvertices[j+3]));
-      
-      geometry.faces.push(new THREE.Face3( j, j+1, j+2 ));
-      geometry.faces.push(new THREE.Face3( j+2, j+1, j+3 ));
-      
-      //geometry.faceVertexUvs[0].push([
-      //  new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value))
-      //]);
-    }
-    */
+    //geometry.faceVertexUvs[0].push([
+    //  new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value))
+    //]);
     geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,0)));
     geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,sh)));
     geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s1.x,s1.y,0)));
@@ -878,12 +515,6 @@ function setup3D()
    var $container = $('#top_level');
   // attach the render-supplied DOM element
   $container.append(renderer.domElement);
-  // draw!
-  //scene.add( camera );
-  //renderer.render(scene, camera); 
-  //render();
-//  animate();
- 
 }
 
 function show3D( rotation, tilt )
@@ -924,7 +555,6 @@ function show3D( rotation, tilt )
       cubeMaterial.color.setRGB( 0.0, 0.8, 0.0 );
       break;
   };
-  
   
   render();
 }
