@@ -890,6 +890,7 @@ function show3D( rotation, tilt )
 {
   if( noSetup ) setup3D();
   
+  // set up camera
   var cx = -Math.cos(rotation) * Math.cos(tilt);
   var cy =  Math.sin(rotation) * Math.cos(tilt);
   var cz =  Math.sin(tilt);
@@ -897,5 +898,33 @@ function show3D( rotation, tilt )
   camera.position = new THREE.Vector3( cx*dist + buildingProperties.x_center, cy*dist + buildingProperties.y_center, dist * cz );
   camera.lookAt( new THREE.Vector3( buildingProperties.x_center, buildingProperties.y_center, 0) );
   pointLight.position = camera.position;
+  
+  // update opacity
+  cubeMaterial.opacity = showStates.fillOpacity;
+  
+  // update color
+  switch( showStates.fillColor )
+  {
+    case 'black':
+      cubeMaterial.color.setRGB( 0.1, 0.1, 0.1 );
+      break;
+    case 'grey':
+      cubeMaterial.color.setRGB( 0.5, 0.5, 0.5 );
+      break;
+    case 'white':
+      cubeMaterial.color.setRGB( 1.0, 1.0, 1.0 );
+      break;
+    case 'blue':
+      cubeMaterial.color.setRGB( 0.0, 0.0, 0.8 );
+      break;
+    case 'red':
+      cubeMaterial.color.setRGB( 0.8, 0.0, 0.0 );
+      break;
+    case 'green':
+      cubeMaterial.color.setRGB( 0.0, 0.8, 0.0 );
+      break;
+  };
+  
+  
   render();
 }
