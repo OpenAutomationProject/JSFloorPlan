@@ -893,7 +893,7 @@ function show3D( rotation, tilt )
   var cx = -Math.cos(rotation) * Math.cos(tilt);
   var cy =  Math.sin(rotation) * Math.cos(tilt);
   var cz =  Math.sin(tilt);
-  camera.up = new THREE.Vector3( -cx, -cy, 1 );
+  camera.up = new THREE.Vector3( Math.cos(rotation) * Math.sin(tilt), -Math.sin(rotation) * Math.sin(tilt), Math.cos(tilt) );
   camera.position = new THREE.Vector3( cx*dist + buildingProperties.x_center, cy*dist + buildingProperties.y_center, dist * cz );
   camera.lookAt( new THREE.Vector3( buildingProperties.x_center, buildingProperties.y_center, 0) );
   pointLight.position = camera.position;
