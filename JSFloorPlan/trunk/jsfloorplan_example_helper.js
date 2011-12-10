@@ -209,6 +209,7 @@ function init()
   });
   $('select').change(function(e){
     showStates[ e.target.name ] = e.target.value;
+    selectChange( e.target.name );
     show3D( roll, tilt );
   }).each(function(){
     showStates[ this.name ] = this.value; // init
@@ -234,6 +235,14 @@ function selectChange( name )
       $( buildingProperties.floor ).each( function(){
         THREE.SceneUtils.traverseHierarchy( this.lineGroup, function( object ) {
           object.visible = showStates['showWallLines']; 
+        });
+      });
+      break;
+      
+    case 'showFloor':
+      $( buildingProperties.floor ).each( function( number ){
+        THREE.SceneUtils.traverseHierarchy( this.wallGroup, function( object ) {
+          object.visible = ( showStates['showFloor'] == number ); 
         });
       });
       break;
