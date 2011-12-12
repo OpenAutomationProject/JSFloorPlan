@@ -299,10 +299,10 @@ function parseXMLFloorPlan( xmlDoc )
       //geometry.faceVertexUvs[0].push([
       //  new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value))
       //]);
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,heightOfGround     )));
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,heightOfGround + sh)));
       geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s1.x,s1.y,heightOfGround     )));
       geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s1.x,s1.y,heightOfGround + sh)));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,heightOfGround     )));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,heightOfGround + sh)));
       geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(sm.x,sm.y,heightOfGround + sh)));
       
       geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s2.x,s2.y,heightOfGround     )));
@@ -314,26 +314,26 @@ function parseXMLFloorPlan( xmlDoc )
       if( wallSideOrder < 0 )
       {
         // Add the wall sides
-        geometry.faces.push(new THREE.Face3( 0, 1, 2 ));
-        geometry.faces.push(new THREE.Face3( 3, 2, 1 ));
+        geometry.faces.push(new THREE.Face3( 2, 3, 0 ));
+        geometry.faces.push(new THREE.Face3( 1, 0, 3 ));
         geometry.faces.push(new THREE.Face3( 5, 6, 7 ));
         geometry.faces.push(new THREE.Face3( 8, 7, 6 ));
         // Add the wall tops
-        geometry.faces.push(new THREE.Face3( 4, 3, 6 ));
-        geometry.faces.push(new THREE.Face3( 1, 6, 3 ));
-        geometry.faces.push(new THREE.Face3( 6, 1, 8 ));
-        geometry.faces.push(new THREE.Face3( 9, 8, 1 ));
+        geometry.faces.push(new THREE.Face3( 1, 6, 9 ));
+        geometry.faces.push(new THREE.Face3( 6, 1, 3 ));
+        geometry.faces.push(new THREE.Face3( 6, 3, 8 ));
+        geometry.faces.push(new THREE.Face3( 4, 8, 3 ));
       } else { 
         // Add the wall sides
-        geometry.faces.push(new THREE.Face3( 0, 2, 1 ));
-        geometry.faces.push(new THREE.Face3( 3, 1, 2 ));
+        geometry.faces.push(new THREE.Face3( 2, 0, 3 ));
+        geometry.faces.push(new THREE.Face3( 1, 3, 0 ));
         geometry.faces.push(new THREE.Face3( 5, 7, 6 ));
         geometry.faces.push(new THREE.Face3( 8, 6, 7 ));
         // Add the wall tops
-        geometry.faces.push(new THREE.Face3( 4, 6, 3 ));
-        geometry.faces.push(new THREE.Face3( 1, 3, 6 ));
-        geometry.faces.push(new THREE.Face3( 6, 8, 1 ));
-        geometry.faces.push(new THREE.Face3( 9, 1, 8 ));
+        geometry.faces.push(new THREE.Face3( 1, 9, 6 ));
+        geometry.faces.push(new THREE.Face3( 6, 3, 1 ));
+        geometry.faces.push(new THREE.Face3( 6, 8, 3 ));
+        geometry.faces.push(new THREE.Face3( 8, 4, 3 ));
       }
       
       geometry.computeFaceNormals();
