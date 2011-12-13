@@ -315,9 +315,13 @@ function parseXMLFloorPlan( xmlDoc )
       {
         // Add the wall sides
         geometry.faces.push(new THREE.Face3( 2, 3, 0 ));
+        geometry.faceVertexUvs[0].push([ new THREE.UV(1,1), new THREE.UV(1,0), new THREE.UV(0,1) ]);
         geometry.faces.push(new THREE.Face3( 1, 0, 3 ));
+        geometry.faceVertexUvs[0].push([ new THREE.UV(0,0), new THREE.UV(0,1), new THREE.UV(1,0) ]);
         geometry.faces.push(new THREE.Face3( 5, 6, 7 ));
+        geometry.faceVertexUvs[0].push([ new THREE.UV(1,1), new THREE.UV(1,0), new THREE.UV(0,1) ]);
         geometry.faces.push(new THREE.Face3( 8, 7, 6 ));
+        geometry.faceVertexUvs[0].push([ new THREE.UV(0,0), new THREE.UV(0,1), new THREE.UV(1,0) ]);
         // Add the wall tops
         geometry.faces.push(new THREE.Face3( 1, 6, 9 ));
         geometry.faces.push(new THREE.Face3( 6, 1, 3 ));
@@ -326,9 +330,13 @@ function parseXMLFloorPlan( xmlDoc )
       } else { 
         // Add the wall sides
         geometry.faces.push(new THREE.Face3( 2, 0, 3 ));
+        geometry.faceVertexUvs[0].push([ new THREE.UV(0,1), new THREE.UV(1,1), new THREE.UV(0,0) ]);
         geometry.faces.push(new THREE.Face3( 1, 3, 0 ));
+        geometry.faceVertexUvs[0].push([ new THREE.UV(1,0), new THREE.UV(0,0), new THREE.UV(1,1) ]);
         geometry.faces.push(new THREE.Face3( 5, 7, 6 ));
+        geometry.faceVertexUvs[0].push([ new THREE.UV(0,1), new THREE.UV(1,1), new THREE.UV(0,0) ]);
         geometry.faces.push(new THREE.Face3( 8, 6, 7 ));
+        geometry.faceVertexUvs[0].push([ new THREE.UV(1,0), new THREE.UV(0,0), new THREE.UV(1,1) ]);
         // Add the wall tops
         geometry.faces.push(new THREE.Face3( 1, 9, 6 ));
         geometry.faces.push(new THREE.Face3( 6, 3, 1 ));
