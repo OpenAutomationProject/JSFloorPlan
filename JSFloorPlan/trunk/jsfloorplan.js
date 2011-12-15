@@ -280,6 +280,7 @@ function parseXMLFloorPlan( xmlDoc )
       var e1 = vertices[ floorWalls[j].endVertex  [0] ];
       var s2 = vertices[ floorWalls[j].startVertex[1] ];
       var e2 = vertices[ floorWalls[j].endVertex  [1] ];
+      
       // check that the start and end points aren't twisted
       var v1 = new Object; v1.x = s1.x-s2.x; v1.y = s1.y-s2.y; 
       var v2 = new Object; v2.x = e1.x-s2.x; v2.y = e1.y-s2.y;
@@ -296,54 +297,127 @@ function parseXMLFloorPlan( xmlDoc )
       var wallSideOrder = (s2.x-s1.x)*(e1.y-s1.y) - (s2.y-s1.y)*(e1.x-s1.x);
       var geometry = new THREE.Geometry();
       
-      //geometry.faceVertexUvs[0].push([
-      //  new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value)), new THREE.UV(u_value, v_value))
-      //]);
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s1.x,s1.y,heightOfGround     )));
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s1.x,s1.y,heightOfGround + sh)));
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,heightOfGround     )));
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e1.x,e1.y,heightOfGround + sh)));
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(sm.x,sm.y,heightOfGround + sh)));
+      var normal1 = new THREE.Vector3(sm.y-em.y,-sm.x+em.x,0); // fixme? normalize
+      var normal2 = new THREE.Vector3(1,0,0);
       
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s2.x,s2.y,heightOfGround     )));
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(s2.x,s2.y,heightOfGround + sh)));
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e2.x,e2.y,heightOfGround     )));
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(e2.x,e2.y,heightOfGround + sh)));
-      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(em.x,em.y,heightOfGround + sh)));
+      var sourrounding = [ new poly2tri.Point(0,0), new poly2tri.Point(0,1), new poly2tri.Point(1,1), new poly2tri.Point(1,0) ];
+      sourrounding[1].startEndMarker = 'start';
+      sourrounding[2].startEndMarker = 'end';
+      var holesToAdd = [];
       
-      if( wallSideOrder < 0 )
+      if( floorWalls[j].holes.length )
       {
-        // Add the wall sides
-        geometry.faces.push(new THREE.Face3( 2, 3, 0 ));
-        geometry.faceVertexUvs[0].push([ new THREE.UV(1,1), new THREE.UV(1,0), new THREE.UV(0,1) ]);
-        geometry.faces.push(new THREE.Face3( 1, 0, 3 ));
-        geometry.faceVertexUvs[0].push([ new THREE.UV(0,0), new THREE.UV(0,1), new THREE.UV(1,0) ]);
-        geometry.faces.push(new THREE.Face3( 5, 6, 7 ));
-        geometry.faceVertexUvs[0].push([ new THREE.UV(1,1), new THREE.UV(1,0), new THREE.UV(0,1) ]);
-        geometry.faces.push(new THREE.Face3( 8, 7, 6 ));
-        geometry.faceVertexUvs[0].push([ new THREE.UV(0,0), new THREE.UV(0,1), new THREE.UV(1,0) ]);
-        // Add the wall tops
-        geometry.faces.push(new THREE.Face3( 1, 6, 9 ));
-        geometry.faces.push(new THREE.Face3( 6, 1, 3 ));
-        geometry.faces.push(new THREE.Face3( 6, 3, 8 ));
-        geometry.faces.push(new THREE.Face3( 4, 8, 3 ));
-      } else { 
-        // Add the wall sides
-        geometry.faces.push(new THREE.Face3( 2, 0, 3 ));
-        geometry.faceVertexUvs[0].push([ new THREE.UV(0,1), new THREE.UV(1,1), new THREE.UV(0,0) ]);
-        geometry.faces.push(new THREE.Face3( 1, 3, 0 ));
-        geometry.faceVertexUvs[0].push([ new THREE.UV(1,0), new THREE.UV(0,0), new THREE.UV(1,1) ]);
-        geometry.faces.push(new THREE.Face3( 5, 7, 6 ));
-        geometry.faceVertexUvs[0].push([ new THREE.UV(0,1), new THREE.UV(1,1), new THREE.UV(0,0) ]);
-        geometry.faces.push(new THREE.Face3( 8, 6, 7 ));
-        geometry.faceVertexUvs[0].push([ new THREE.UV(1,0), new THREE.UV(0,0), new THREE.UV(1,1) ]);
-        // Add the wall tops
-        geometry.faces.push(new THREE.Face3( 1, 9, 6 ));
-        geometry.faces.push(new THREE.Face3( 6, 3, 1 ));
-        geometry.faces.push(new THREE.Face3( 6, 8, 3 ));
-        geometry.faces.push(new THREE.Face3( 8, 4, 3 ));
-      }
+        var holes = floorWalls[j].holes;
+        for( var h = 0; h < holes.length; h++ )
+        {
+          var wallLength = calcLength2D( sm, em );
+          var fLeft  =  holes[h].distance                   / wallLength;
+          var fRight = (holes[h].distance + holes[h].width) / wallLength;
+          if( fLeft  < 0.0 ) fLeft = 0.01; //// FIXME
+          if( fRight > 1.0 ) fRight = 0.99; //// FIXME
+          var lintel  = (sh - holes[h].lintel) / sh;
+          var paparet = holes[h].paparet / sh;
+          if( 1 == lintel )
+          {
+            // not a hole, the sourrounding goes to the groud...
+            
+            if( paparet == 0 ) continue; // FIXME: Assume paparet != 0 - otherwise it should be two walls...
+
+            console.log( sourrounding );
+            sourrounding.splice( -2, 0, new poly2tri.Point(fLeft,1), new poly2tri.Point(fLeft,paparet), new poly2tri.Point(fRight,paparet), new poly2tri.Point(fRight,1) );
+            console.log( sourrounding );
+            continue;
+          }
+          //if( 0 == paparet ) paparet = 0.01;  //// FIXME
+          if( 0 == paparet )
+          {
+            // not a hole, the sourrounding goes to the groud...
+            
+            if( lintel == 1 ) continue; // FIXME: Assume lintel != 1 - otherwise it should be two walls...
+
+            sourrounding.splice( 0, 0, new poly2tri.Point(fRight,0), new poly2tri.Point(fRight,lintel), new poly2tri.Point(fLeft,lintel), new poly2tri.Point(fLeft,0) );
+            continue;
+          }
+          
+          holesToAdd.push( [new poly2tri.Point(fLeft,paparet), new poly2tri.Point(fRight,paparet), new poly2tri.Point(fRight,lintel), new poly2tri.Point(fLeft,lintel)] );
+        }
+      } // if( floorWalls[j].holes.length )
+      var swctx = new poly2tri.SweepContext( sourrounding );
+      for( var htA = 0; htA < holesToAdd.length; htA++ )
+        swctx.AddHole( holesToAdd[htA] );
       
+      // Do the triangulation - FIXME: handle exceptions, don't ignore them...
+      try {
+        poly2tri.sweep.Triangulate(swctx);
+      }catch(err){}
+      
+      // mark all points to make sure that we don't need to double vertices
+      for( var tp = 0; tp < swctx.point_count(); tp++ )
+        swctx.GetPoint( tp ).id = tp;
+      
+      // translate poly2tri triangles to THREE.js faces:
+      var p2tF = [];
+      $.each(swctx.GetTriangles(), function(idx, val) {
+        p2tF.push(new THREE.Face3(val.GetPoint(0).id, val.GetPoint(1).id, val.GetPoint(2).id));
+      });
+      
+      Tvertices = swctx.points_;
+      Tfaces = p2tF;
+      var wall1vertices = [];
+      var wall2vertices = [];
+      var sId, eId;
+      for( var v = 0; v < Tvertices.length; v++ )
+      {
+        var tv = Tvertices[v];
+        var x1 = s1.x * tv.x + e1.x * (1 - tv.x);
+        var x2 = s2.x * tv.x + e2.x * (1 - tv.x);
+        var y1 = s1.y * tv.x + e1.y * (1 - tv.x);
+        var y2 = s2.y * tv.x + e2.y * (1 - tv.x);
+        var z = heightOfGround + sh*tv.y;
+        if( wallSideOrder > 0 )
+        {
+          wall1vertices.push(new THREE.Vertex(new THREE.Vector3(x1,y1,z), normal1));
+          wall2vertices.push(new THREE.Vertex(new THREE.Vector3(x2,y2,z), normal1));
+        } else {
+          wall1vertices.push(new THREE.Vertex(new THREE.Vector3(x2,y2,z), normal1));
+          wall2vertices.push(new THREE.Vertex(new THREE.Vector3(x1,y1,z), normal1));
+        }
+        if( 'startEndMarker' in tv )
+        {
+          if( 'start' == tv.startEndMarker )
+          {
+            sId = wall1vertices.length - 1;
+          } else {
+            eId = wall1vertices.length - 1;
+          }
+        }
+      }
+      var wall1verticesLength = wall1vertices.length;
+      geometry.vertices = wall1vertices.concat( wall2vertices );
+      var s1id = sId, s2id = sId + wall1verticesLength, e1id = eId, e2id = eId + wall1verticesLength;
+      //geometry.faces =  Tfaces;
+      for( var f = 0; f < Tfaces.length; f++ )
+      {
+        // wall side 1
+        geometry.faces.push( Tfaces[f] );
+        // wall side 2
+        geometry.faces.push(new THREE.Face3(Tfaces[f].c+wall1verticesLength, Tfaces[f].b+wall1verticesLength, Tfaces[f].a+wall1verticesLength ) );
+      }
+      // wall top
+      var mId = geometry.vertices.length;
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(sm.x,sm.y,heightOfGround   )));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(sm.x,sm.y,heightOfGround+sh)));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(em.x,em.y,heightOfGround   )));
+      geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(em.x,em.y,heightOfGround+eh)));
+      geometry.faces.push(new THREE.Face3(s1id, s2id, mId+1) );
+      geometry.faces.push(new THREE.Face3(s2id, s1id, e1id ) );
+      geometry.faces.push(new THREE.Face3(e2id, s2id, e1id ) );
+      geometry.faces.push(new THREE.Face3(e2id, e1id, mId+3) );
+      /*
+       *        geometry.faces.push(new THREE.Face3( 2, 3, 0 ));
+       *        geometry.faceVertexUvs[0].push([ new THREE.UV(1,1), new THREE.UV(1,0), new THREE.UV(0,1) ]);
+       */
+      //console.log(geometry, cubeMaterial);
       geometry.computeFaceNormals();
       var mesh = new THREE.Mesh(geometry, cubeMaterial);
       wallGroup.add(mesh);
