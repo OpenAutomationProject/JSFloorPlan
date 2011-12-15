@@ -41,7 +41,7 @@
     <wall start="12" end="1"  thickness=".24" /> 
     <wall start="2"  end="13" thickness=".10" /> 
     <wall start="12" end="13" thickness=".10">
-      <hole id="door01" distance="0.5" width="0.88" paparet="0.0" lintel="0.2" />
+      <hole id="door02" distance="0.5" width="0.88" paparet="0.0" lintel="0.2" />
     </wall>
     <wall start="13" end="14" thickness=".10" />
     <wall start="14" end="4"  thickness=".10" endoffset="-.07" /> 
