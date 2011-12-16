@@ -333,7 +333,7 @@ function parseXMLFloorPlan( xmlDoc )
           {
             // not a hole, the sourrounding goes to the groud...
             
-            if( lintel == 1 ) continue; // FIXME: Assume lintel != 1 - otherwise it should be two walls...
+            // lintel == 1 can't happen, it's checked in the if clause above
 
             sourrounding.splice( 0, 0, new poly2tri.Point(fRight,0), new poly2tri.Point(fRight,lintel), new poly2tri.Point(fLeft,lintel), new poly2tri.Point(fLeft,0) );
             continue;
@@ -398,10 +398,16 @@ function parseXMLFloorPlan( xmlDoc )
       //geometry.faces =  Tfaces;
       for( var f = 0; f < Tfaces.length; f++ )
       {
+        var uv_a = new THREE.UV( Tvertices[Tfaces[f].a].x, Tvertices[Tfaces[f].a].y );
+        var uv_b = new THREE.UV( Tvertices[Tfaces[f].b].x, Tvertices[Tfaces[f].b].y );
+        var uv_c = new THREE.UV( Tvertices[Tfaces[f].c].x, Tvertices[Tfaces[f].c].y );
+        
         // wall side 1
         geometry.faces.push( Tfaces[f] );
+        geometry.faceVertexUvs[0].push([ uv_a, uv_b, uv_c ]);
         // wall side 2
         geometry.faces.push(new THREE.Face3(Tfaces[f].c+wall1verticesLength, Tfaces[f].b+wall1verticesLength, Tfaces[f].a+wall1verticesLength ) );
+        geometry.faceVertexUvs[0].push([ uv_c, uv_b, uv_a ]);
       }
       // wall top
       var mId = geometry.vertices.length;
@@ -413,10 +419,6 @@ function parseXMLFloorPlan( xmlDoc )
       geometry.faces.push(new THREE.Face3(s2id, s1id, e1id ) );
       geometry.faces.push(new THREE.Face3(e2id, s2id, e1id ) );
       geometry.faces.push(new THREE.Face3(e2id, e1id, mId+3) );
-      /*
-       *        geometry.faces.push(new THREE.Face3( 2, 3, 0 ));
-       *        geometry.faceVertexUvs[0].push([ new THREE.UV(1,1), new THREE.UV(1,0), new THREE.UV(0,1) ]);
-       */
       //console.log(geometry, cubeMaterial);
       geometry.computeFaceNormals();
       var mesh = new THREE.Mesh(geometry, cubeMaterial);
