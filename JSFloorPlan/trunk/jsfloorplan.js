@@ -313,8 +313,8 @@ function parseXMLFloorPlan( xmlDoc )
           var wallLength = calcLength2D( sm, em );
           var fLeft  =  holes[h].distance                   / wallLength;
           var fRight = (holes[h].distance + holes[h].width) / wallLength;
-          if( fLeft  < 0.0 ) fLeft = 0.01; //// FIXME
-          if( fRight > 1.0 ) fRight = 0.99; //// FIXME
+          if( fLeft  <= 0.0 ) fLeft  = 0.001; //// FIXME - actually the config file is bad. Leave at least 1mm wall
+          if( fRight >= 1.0 ) fRight = 0.999; //// FIXME - actually the config file is bad. Leave at least 1mm wall
           var lintel  = (sh - holes[h].lintel) / sh;
           var paparet = holes[h].paparet / sh;
           if( 1 == lintel )
@@ -323,12 +323,9 @@ function parseXMLFloorPlan( xmlDoc )
             
             if( paparet == 0 ) continue; // FIXME: Assume paparet != 0 - otherwise it should be two walls...
 
-            console.log( sourrounding );
             sourrounding.splice( -2, 0, new poly2tri.Point(fLeft,1), new poly2tri.Point(fLeft,paparet), new poly2tri.Point(fRight,paparet), new poly2tri.Point(fRight,1) );
-            console.log( sourrounding );
             continue;
           }
-          //if( 0 == paparet ) paparet = 0.01;  //// FIXME
           if( 0 == paparet )
           {
             // not a hole, the sourrounding goes to the groud...
@@ -342,7 +339,7 @@ function parseXMLFloorPlan( xmlDoc )
           holesToAdd.push( [new poly2tri.Point(fLeft,paparet), new poly2tri.Point(fRight,paparet), new poly2tri.Point(fRight,lintel), new poly2tri.Point(fLeft,lintel)] );
         }
       } // if( floorWalls[j].holes.length )
-      var swctx = new poly2tri.SweepContext( sourrounding );
+      var swctx = new poly2tri.SweepContext( sourrounding.slice(0) ); // pass a copy of sourrounding
       for( var htA = 0; htA < holesToAdd.length; htA++ )
         swctx.AddHole( holesToAdd[htA] );
       
@@ -416,10 +413,28 @@ function parseXMLFloorPlan( xmlDoc )
       geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(em.x,em.y,heightOfGround   )));
       geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(em.x,em.y,heightOfGround+eh)));
       geometry.faces.push(new THREE.Face3(s1id, s2id, mId+1) );
-      geometry.faces.push(new THREE.Face3(s2id, s1id, e1id ) );
-      geometry.faces.push(new THREE.Face3(e2id, s2id, e1id ) );
       geometry.faces.push(new THREE.Face3(e2id, e1id, mId+3) );
-      //console.log(geometry, cubeMaterial);
+      
+      for( var e = 0; e < sourrounding.length; e++ )
+      {
+        var id1 = sourrounding[e                        ].id;
+        var id2 = sourrounding[(e+1)%sourrounding.length].id;
+        geometry.faces.push(new THREE.Face3( id1, id2                      , id1 + wall1verticesLength) );
+        geometry.faces.push(new THREE.Face3( id2, id2 + wall1verticesLength, id1 + wall1verticesLength) );
+      }
+      
+      // hole sides
+      for( var hta = 0; hta < holesToAdd.length; hta++ )
+      {
+        for( var e = 0; e < holesToAdd[hta].length; e++ )
+        {
+          var id1 = holesToAdd[hta][e                        ].id;
+          var id2 = holesToAdd[hta][(e+1)%sourrounding.length].id;
+          geometry.faces.push(new THREE.Face3( id1, id2                      , id1 + wall1verticesLength) );
+          geometry.faces.push(new THREE.Face3( id2, id2 + wall1verticesLength, id1 + wall1verticesLength) );
+        }
+      }
+      
       geometry.computeFaceNormals();
       var mesh = new THREE.Mesh(geometry, cubeMaterial);
       mesh.castShadow    = true;
