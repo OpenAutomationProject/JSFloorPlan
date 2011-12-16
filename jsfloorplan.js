@@ -395,16 +395,19 @@ function parseXMLFloorPlan( xmlDoc )
       //geometry.faces =  Tfaces;
       for( var f = 0; f < Tfaces.length; f++ )
       {
-        var uv_a = new THREE.UV( Tvertices[Tfaces[f].a].x, Tvertices[Tfaces[f].a].y );
-        var uv_b = new THREE.UV( Tvertices[Tfaces[f].b].x, Tvertices[Tfaces[f].b].y );
-        var uv_c = new THREE.UV( Tvertices[Tfaces[f].c].x, Tvertices[Tfaces[f].c].y );
+        var uv_a1 = new THREE.UV(   Tvertices[Tfaces[f].a].x, 1-Tvertices[Tfaces[f].a].y );
+        var uv_b1 = new THREE.UV(   Tvertices[Tfaces[f].b].x, 1-Tvertices[Tfaces[f].b].y );
+        var uv_c1 = new THREE.UV(   Tvertices[Tfaces[f].c].x, 1-Tvertices[Tfaces[f].c].y );
+        var uv_a2 = new THREE.UV( 1-Tvertices[Tfaces[f].c].x, 1-Tvertices[Tfaces[f].c].y );
+        var uv_b2 = new THREE.UV( 1-Tvertices[Tfaces[f].b].x, 1-Tvertices[Tfaces[f].b].y );
+        var uv_c2 = new THREE.UV( 1-Tvertices[Tfaces[f].a].x, 1-Tvertices[Tfaces[f].a].y );
         
         // wall side 1
         geometry.faces.push( Tfaces[f] );
-        geometry.faceVertexUvs[0].push([ uv_a, uv_b, uv_c ]);
+        geometry.faceVertexUvs[0].push([ uv_a1, uv_b1, uv_c1 ]);
         // wall side 2
         geometry.faces.push(new THREE.Face3(Tfaces[f].c+wall1verticesLength, Tfaces[f].b+wall1verticesLength, Tfaces[f].a+wall1verticesLength ) );
-        geometry.faceVertexUvs[0].push([ uv_c, uv_b, uv_a ]);
+        geometry.faceVertexUvs[0].push([ uv_a2, uv_b2, uv_c2 ]);
       }
       // wall top
       var mId = geometry.vertices.length;
