@@ -113,7 +113,7 @@ var cube = new THREE.Mesh(
 cube.position = new THREE.Vector3(50,50,50);
 //scene.add( cube );
 
-//cubeMaterial = new THREE.MeshBasicMaterial({ map: THREE.ImageUtils.loadTexture( 'media/demo_texture_512x512.png' ) });
+cubeMaterial = new THREE.MeshBasicMaterial({ map: THREE.ImageUtils.loadTexture( 'media/demo_texture_512x512.png' ) });
 
 var lineMaterial = new THREE.LineBasicMaterial( { color: 0x0099ff, linewidth: 2 } );
  
