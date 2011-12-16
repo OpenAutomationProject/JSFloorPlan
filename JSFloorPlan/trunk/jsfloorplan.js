@@ -422,6 +422,8 @@ function parseXMLFloorPlan( xmlDoc )
       //console.log(geometry, cubeMaterial);
       geometry.computeFaceNormals();
       var mesh = new THREE.Mesh(geometry, cubeMaterial);
+      mesh.castShadow    = true;
+      mesh.receiveShadow = true;
       wallGroup.add(mesh);
     } // end for( j=0; j<floorWalls.length; j++ )
     Object3D.add( lineGroup );
@@ -576,9 +578,10 @@ function setup3D()
   var showFloor = showStates.showFloor;
   
   ///////////
-  scene.add(pointLight);
+  scene.add(sunLight);
+  //scene.add(pointLight);
   scene.add(ambientLight);
-  scene.add( camera );
+  //scene.add( camera );
    var $container = $('#top_level');
   // attach the render-supplied DOM element
   $container.append(renderer.domElement);
@@ -598,10 +601,28 @@ function show3D( rotation, tilt )
   var cy =  Math.sin(rotation) * Math.cos(tilt);
   var cz =  Math.sin(tilt);
   var heightOfGround = buildingProperties.floor[ showStates.showFloor ].heightOfGround;
+  var target = new THREE.Vector3( buildingProperties.x_center, buildingProperties.y_center, heightOfGround);
   camera.up = new THREE.Vector3( Math.cos(rotation) * Math.sin(tilt), -Math.sin(rotation) * Math.sin(tilt), Math.cos(tilt) );
   camera.position = new THREE.Vector3( cx*dist + buildingProperties.x_center, cy*dist + buildingProperties.y_center, dist * cz + heightOfGround);
-  camera.lookAt( new THREE.Vector3( buildingProperties.x_center, buildingProperties.y_center, heightOfGround) );
+  camera.lookAt( target );
   pointLight.position = camera.position;
+  
+  // set up sun
+  var sx = -Math.cos(lightDirection) * Math.cos(lightHeight);
+  var sy =  Math.sin(lightDirection) * Math.cos(lightHeight);
+  var sz =  Math.sin(lightHeight);
+  sunLight.target.position = target;
+  sunLight.position = new THREE.Vector3( sx * lightDistance, sy * lightDistance, sz * lightDistance );
+  sunLight.intensity = lightStrength / 100.0;
+  sunLightViewLine.geometry.vertices[0].position = sunLight.position;
+  sunLightViewLine.geometry.vertices[1].position = sunLight.target.position;
+  sunLightViewLine.geometry.__dirtyVertices = true;
+  
+  if( showStates.showLightView )
+  {
+    camera.position = sunLight.position;
+    camera.lookAt( sunLight.target.position );
+  }
   
   // update opacity
   cubeMaterial.opacity = showStates.fillOpacity;
