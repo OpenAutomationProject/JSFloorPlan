@@ -72,12 +72,25 @@ controls.dynamicDampingFactor = 0.3;
 controls.keys = [ 65, 83, 68 ];
 */
 var scene = new THREE.Scene();
-
+scene.add( camera );
 // the camera starts at 0,0,0 so pull it back
 camera.position.z = 300;
 
 // start the renderer
 renderer.setSize(WIDTH, HEIGHT);
+
+// enable shadows
+var SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
+renderer.shadowCameraNear = 0.1;
+renderer.shadowCameraFar = 100;
+renderer.shadowCameraFov = 45;
+
+renderer.shadowMapBias = 0.0039;
+renderer.shadowMapDarkness = 0.5;
+renderer.shadowMapWidth = SHADOW_MAP_WIDTH;
+renderer.shadowMapHeight = SHADOW_MAP_HEIGHT;
+renderer.shadowMapEnabled = true;
+//renderer.shadowMapSoft = true;
 
 
 // set up the sphere vars
@@ -114,6 +127,7 @@ cube.position = new THREE.Vector3(50,50,50);
 //scene.add( cube );
 
 cubeMaterial = new THREE.MeshBasicMaterial({ map: THREE.ImageUtils.loadTexture( 'media/demo_texture_512x512.png' ) });
+//cubeMaterial = new THREE.MeshPhongMaterial( { color: 0xff0000, specular: 0xffffff, ambient: 0xaa0000 } );
 
 var lineMaterial = new THREE.LineBasicMaterial( { color: 0x0099ff, linewidth: 2 } );
  
@@ -128,6 +142,25 @@ pointLight.position.z = 130;
 
 // add to the scene
 //scene.add(pointLight);
+
+var lightDirection = 3.9;
+var lightHeight    = 0.25;
+var lightStrength  = 80;
+var lightDistance  = 50;
+//var sunLight = new THREE.PointLight( 0xFFFFFF );
+//var sunLight = new THREE.DirectionalLight( 0xFFFFFF );
+var sunLight =  new THREE.SpotLight( 0xffffff );
+sunLight.position.set( 0, 1500, 1000 );
+sunLight.target.position.set( 0, 0, 0 );
+sunLight.castShadow = true;
+var sunLightView = new THREE.Geometry(); 
+sunLightView.vertices.push( new THREE.Vertex( sunLight.position ) ); 
+sunLightView.vertices.push( new THREE.Vertex( sunLight.target.position ) ); 
+var sunLightViewLine = new THREE.Line( sunLightView, lineMaterial );
+scene.add( sunLightViewLine );
+//var dlight = new THREE.DirectionalLight( 0xffffff, 0.1 );
+//                                dlight.position.set( 0.5, -1, 0 ).normalize();
+//                                scene.add( dlight );
 
 
 /**
@@ -400,6 +433,10 @@ function createSlider()
   $( "#rollSlider" ).slider({ min: 0, max: 360, change: rollChange, slide: rollChange});
   $( "#tiltSlider" ).slider({ min: 0, max:  90, change: tiltChange, slide: tiltChange});
   $( "#distSlider" ).slider({ min: 5, max:  30, change: distChange, slide: distChange});
+  $( "#lightDirectionSlider" ).slider({ min: 0, max: 360, change: lightDirectionChange, slide: lightDirectionChange});
+  $( "#lightHeightSlider"    ).slider({ min: 0, max:  90, change: lightHeightChange   , slide: lightHeightChange   });
+  $( "#lightStrengthSlider"  ).slider({ min: 0, max: 100, change: lightStrengthChange , slide: lightStrengthChange });
+  $( "#lightDistanceSlider"  ).slider({ min:10, max: 100, change: lightDistanceChange , slide: lightDistanceChange });
   updateSlider();
 }
 
@@ -409,9 +446,15 @@ function updateSlider()
   globalInUpdateSlider = true;
   var rollAngle = (roll * 180/Math.PI);
   var tiltAngle = (tilt * 180/Math.PI);
+  var lightDirectionAngle = (lightDirection * 180/Math.PI);
+  var lightHeightAngle    = (lightHeight    * 180/Math.PI);
   $( "#rollSlider" ).slider( "option", "value", rollAngle );
   $( "#tiltSlider" ).slider( "option", "value", tiltAngle );
   $( "#distSlider" ).slider( "option", "value", dist      );
+  $( "#lightDirectionSlider" ).slider( "option", "value", lightDirectionAngle );
+  $( "#lightHeightSlider"    ).slider( "option", "value", lightHeightAngle    );
+  $( "#lightStrengthSlider"  ).slider( "option", "value", lightStrength       );
+  $( "#lightDistanceSlider"  ).slider( "option", "value", lightDistance       );
   globalInUpdateSlider = false;
 }
 
@@ -435,3 +478,33 @@ function distChange( event, ui )
   dist = ui.value;
   show3D( roll, tilt );
 }
+
+function lightDirectionChange( event, ui ) 
+{ 
+  if( globalInUpdateSlider ) return true;
+  lightDirection = ui.value * Math.PI / 180;
+  show3D( roll, tilt );
+}
+
+function lightHeightChange( event, ui ) 
+{ 
+  if( globalInUpdateSlider ) return true;
+  lightHeight = ui.value * Math.PI / 180;
+  show3D( roll, tilt );
+}
+
+function lightStrengthChange( event, ui ) 
+{
+  if( globalInUpdateSlider ) return true;
+  lightStrength = ui.value;
+  show3D( roll, tilt );
+}
+
+function lightDistanceChange( event, ui ) 
+{
+  if( globalInUpdateSlider ) return true;
+  lightDistance = ui.value;
+  show3D( roll, tilt );
+}
+
+
