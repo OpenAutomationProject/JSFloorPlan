@@ -26,7 +26,7 @@
  * JSFloorPlan 3D library.
  * @module JSFloorPlan3D
  * @title  JS Floor Plan 3D
- * @reqires jQuery
+ * @reqires jQuery, Three.js
  */
 if (typeof JSFLOORPLAN3D == 'undefined' || !JSFLOORPLAN3D)
 {
@@ -43,7 +43,50 @@ if (typeof JSFLOORPLAN3D == 'undefined' || !JSFLOORPLAN3D)
  * @constructor FOO
  */
 JSFLOORPLAN3D= function () {
+  ////////////////////////////////////////////////////////////////////////////
+  // Definition of the private variables
+  
   var JSFloorPlan3D = this;
+  var floor;
+  
+  // this array will contain all vertices to show in the svg
+  var vertices = Array();
+  // infos about the building
+  JSFloorPlan3D.buildingProperties = { floor: [], Object3D: new THREE.Object3D() };
+  var imageCenter = new Object;
+  var noFloorplan = true;
+
+  /**
+   * Store all nodes. This is an hash of points.
+   * @property floorNodes
+   * @type Hash
+   * @private
+   */
+  var floorNodes = new Object(); 
+
+  /**
+   * Store all walls. This is an arry of <code>wall</code> objects.
+   * @property floorWalls
+   * @type Array
+   * @private
+   */
+  var floorWalls = new Array(); 
+
+  /**
+   * Store all rooms. This is an array of arrays of Objects.
+   * @property rooms
+   * @type Array
+   * @private
+   */
+  var rooms = new Array;
+
+  /**
+   * Status if the 3D setup was done.
+   * @property noSetup
+   * @type Bool
+   * @private
+   */
+  var noSetup = true;
   
   /**
   * Constant representing the ID of an ELEMENT_NODE
@@ -54,6 +97,9 @@ JSFLOORPLAN3D= function () {
   * @type Enum
   */
   var ELEMENT_NODE = 1;
+  
+  ////////////////////////////////////////////////////////////////////////////
+  // Definition of the private methods
   
   /**
    * Calculate the distance between two cartesian 2D points.
@@ -136,16 +182,6 @@ JSFLOORPLAN3D= function () {
     var pseudoangle_b = b.y>=0 ? (1-b.x) : (b.x+3);  
     return pseudoangle_a - pseudoangle_b; 
   }
-  
-  var floor;
-  
-  // this array will contain all vertices to show in the svg
-  var vertices = Array();
-  // infos about the building
-  JSFloorPlan3D.buildingProperties = { floor: [], Object3D: new THREE.Object3D() };
-  var imageCenter = new Object;
-  
-  var noFloorplan = true;
   
   /**
    * Parse and create internal structure for the floor plan.
@@ -544,13 +580,6 @@ JSFLOORPLAN3D= function () {
   };
   
   /**
-   * Store all nodes. This is an hash of points.
-   * @property floorNodes
-   * @type Hash
-   * @private
-   */
-  var floorNodes = new Object(); 
-  /**
    * Fill the <code>floorNodes</code> structure with the nodes from the
    * config file.
    * @method parseFloorNodes
@@ -593,14 +622,6 @@ JSFLOORPLAN3D= function () {
       }
     }
   }
-  
-  /**
-   * Store all walls. This is an arry of <code>wall</code> objects.
-   * @property floorWalls
-   * @type Array
-   * @private
-   */
-  var floorWalls = new Array(); 
   
   /**
    * Fill the <code>floorWalls</code> structure with the wall elements from the
@@ -688,13 +709,6 @@ JSFLOORPLAN3D= function () {
   }
   
   /**
-   * Store all rooms. This is an array of arrays of Objects.
-   * @property rooms
-   * @type Array
-   * @private
-   */
-  var rooms = new Array;
-  /**
    * Fill the <code>rooms</code> array with the room elements from the
    * config file.
    * @method parseFloorRooms
@@ -754,7 +768,6 @@ JSFLOORPLAN3D= function () {
     }
   }
   
-  var noSetup = true;
   /**
    * Setup the whole scene
    * @method setup3D
