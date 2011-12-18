@@ -21,6 +21,12 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+j = new JSFLOORPLAN3D();
+function loadFloorplan()
+{
+  $.get('floorplan01.xml', j.parseXMLFloorPlan, 'xml');
+}
+
 
 function three_init()
 {
@@ -183,7 +189,7 @@ if ( !window.requestAnimationFrame ) {
 function animate() {
   requestAnimationFrame( animate );
   //render();
-  show3D( roll, tilt );
+  j.show3D( roll, tilt );
   //stats.update();
 }
 
@@ -238,14 +244,14 @@ function init()
   $('input').change(function(e){
     showStates[ e.target.name ] = e.target.checked;
     selectChange( e.target.name );
-    show3D( roll, tilt );
+    j.show3D( roll, tilt );
   }).each(function(){
     showStates[ this.name ] = this.checked; // init
   });
   $('select').change(function(e){
     showStates[ e.target.name ] = e.target.value;
     selectChange( e.target.name );
-    show3D( roll, tilt );
+    j.show3D( roll, tilt );
   }).each(function(){
     showStates[ this.name ] = this.value; // init
   });
@@ -259,7 +265,7 @@ function selectChange( name )
   switch( name )
   {
     case 'showNodes':
-      $( buildingProperties.floor ).each( function(){
+      $( j.buildingProperties.floor ).each( function(){
         THREE.SceneUtils.traverseHierarchy( this.nodeGroup, function( object ) {
           object.visible = showStates['showNodes']; 
         });
@@ -267,7 +273,7 @@ function selectChange( name )
       break;
       
     case 'showWallLines':
-      $( buildingProperties.floor ).each( function(){
+      $( j.buildingProperties.floor ).each( function(){
         THREE.SceneUtils.traverseHierarchy( this.lineGroup, function( object ) {
           object.visible = showStates['showWallLines']; 
         });
@@ -275,7 +281,7 @@ function selectChange( name )
       break;
       
     case 'showFloor':
-      $( buildingProperties.floor ).each( function( number ){
+      $( j.buildingProperties.floor ).each( function( number ){
         THREE.SceneUtils.traverseHierarchy( this.wallGroup, function( object ) {
           object.visible = ( showStates['showFloor'] == number ); 
         });
@@ -316,7 +322,7 @@ function move()
   if( tilt < 0 )
     tilt_dir = 1;
 
-  show3D( roll, tilt );
+  j.show3D( roll, tilt );
   //////
 
   var middle = new Date();
@@ -397,7 +403,7 @@ function check( what, redraw )
 
   if( redraw )
   {
-    show3D( roll, tilt, plan );
+    j.show3D( roll, tilt, plan );
   }
 }
 */
@@ -421,7 +427,7 @@ function selectValue( what, redraw )
 
   if( redraw )
   {
-    show3D( roll, tilt, plan );
+    j.show3D( roll, tilt, plan );
   }
 }
 */
@@ -462,49 +468,49 @@ function rollChange( event, ui )
 { 
   if( globalInUpdateSlider ) return true;
   roll = ui.value * Math.PI / 180;
-  show3D( roll, tilt );
+  j.show3D( roll, tilt );
 }
 
 function tiltChange( event, ui ) 
 {
   if( globalInUpdateSlider ) return true;
   tilt = ui.value * Math.PI / 180;
-  show3D( roll, tilt );
+  j.show3D( roll, tilt );
 }
 
 function distChange( event, ui ) 
 {
   if( globalInUpdateSlider ) return true;
   dist = ui.value;
-  show3D( roll, tilt );
+  j.show3D( roll, tilt );
 }
 
 function lightDirectionChange( event, ui ) 
 { 
   if( globalInUpdateSlider ) return true;
   lightDirection = ui.value * Math.PI / 180;
-  show3D( roll, tilt );
+  j.show3D( roll, tilt );
 }
 
 function lightHeightChange( event, ui ) 
 { 
   if( globalInUpdateSlider ) return true;
   lightHeight = ui.value * Math.PI / 180;
-  show3D( roll, tilt );
+  j.show3D( roll, tilt );
 }
 
 function lightStrengthChange( event, ui ) 
 {
   if( globalInUpdateSlider ) return true;
   lightStrength = ui.value;
-  show3D( roll, tilt );
+  j.show3D( roll, tilt );
 }
 
 function lightDistanceChange( event, ui ) 
 {
   if( globalInUpdateSlider ) return true;
   lightDistance = ui.value;
-  show3D( roll, tilt );
+  j.show3D( roll, tilt );
 }
 
 
