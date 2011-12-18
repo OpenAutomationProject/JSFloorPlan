@@ -20,6 +20,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  *                                                                         * 
+ * @module JSFloorPlan3D                                                   *
+ * @submodule JSFloorPlan3D_example                                        *
  ***************************************************************************/
 
 
@@ -166,6 +168,8 @@ scene.add( sunLightViewLine );
 /**
  * Provides requestAnimationFrame in a cross browser way.
  * http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+ * @class window
+ * @method requestAnimationFrame
  */
 
 if ( !window.requestAnimationFrame ) {
