@@ -20,6 +20,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  *                                                                         * 
+ * @module JSFloorPlan3D                                                   *
  ***************************************************************************/
 
 // setup script here:
@@ -365,7 +366,6 @@ function parseXMLFloorPlan( xmlDoc )
       var sId, eId;
       for( var v = 0; v < Tvertices.length; v++ )
       {
-        /* prepare for later...
         // project s1, e1 and s2, e2 onto line sm->em
         var lSquaredInv = 1.0 / ((em.x-sm.x)*(em.x-sm.x) + (em.y-sm.y)*(em.y-sm.y));
         var s1f = 1-((s1.x-sm.x)*(em.x-sm.x) + (s1.y-sm.y)*(em.y-sm.y))*lSquaredInv;
@@ -380,8 +380,7 @@ function parseXMLFloorPlan( xmlDoc )
         var x2 = s2.x * tvx2 + e2.x * (1 - tvx2);
         var y1 = s1.y * tvx1 + e1.y * (1 - tvx1);
         var y2 = s2.y * tvx2 + e2.y * (1 - tvx2);
-        console.log( sm, em, s1, e1, tvx1, x1, y1, s2, e2, tvx2, x2, y2 );
-        */
+        //console.log( sm, em, s1, e1, tvx1, x1, y1, s2, e2, tvx2, x2, y2 );
         var z = heightOfGround + sh*tv.y;
         if( wallSideOrder > 0 )
         {
