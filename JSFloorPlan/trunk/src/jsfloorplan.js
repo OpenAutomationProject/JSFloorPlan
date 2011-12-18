@@ -26,32 +26,57 @@
  * JSFloorPlan 3D library.
  * @module JSFloorPlan3D
  * @title  JS Floor Plan 3D
+ * @reqires jQuery
  */
 if (typeof JSFLOORPLAN3D == 'undefined' || !JSFLOORPLAN3D)
 {
-  /**
+  /*
    * The JSFLOORPLAN3D global namespace object. If JSFLOORPLAN3D is already
-   * defined, the existing JSFLOORPLAN4D object will not be overwritten so
+   * defined, the existing JSFLOORPLAN3D object will not be overwritten so
    * that defined namespaces are preserved.
-   * @class JSFLOORPLAN3D
-   * @static
    */
   var JSFLOORPLAN3D = {};
 }
 
+/**
+ * @class JSFLOORPLAN3D
+ * @constructor FOO
+ */
 JSFLOORPLAN3D= function () {
   var JSFloorPlan3D = this;
-  // don't change anything below:
+  
+  /**
+  * Constant representing the ID of an ELEMENT_NODE
+  * @property ELEMENT_NODE
+  * @private
+  * @static
+  * @final
+  * @type Enum
+  */
   var ELEMENT_NODE = 1;
   
-  // calculate the distance between two cartesian 2D points
+  /**
+   * Calculate the distance between two cartesian 2D points.
+   * @method calcLength2D
+   * @private
+   * @param {Point} start
+   * @param {Point} end
+   */
   function calcLength2D( start, end )
   {
     return Math.sqrt( (end.x-start.x)*(end.x-start.x) +
     (end.y-start.y)*(end.y-start.y) );
   }
   
-  // calculate the rotation of a cartesian 2D point around the center
+  /**
+   * calculate the rotation of a cartesian 2D point around the center
+   * @method rotate2D
+   * @private
+   * @param {Float} angle Rotation angle
+   * @param {Point} point
+   * @param {Point} center
+   * @return {Point} new point containing the turned coordinates
+   */
   function rotate2D( angle, point, center )
   {
     var s = Math.sin( angle );
@@ -62,8 +87,17 @@ JSFLOORPLAN3D= function () {
     return ret;
   }
   
-  // calculate the rotation of a cartesian 2D point around the center
-  // but with given sin and cos of the angle
+  /**
+   * Calculate the rotation of a cartesian 2D point around the center
+   * but with given sin and cos of the angle.
+   * @method rotate2D
+   * @private
+   * @param {Float} s Sin of the rotation angle
+   * @param {Float} c Cos of the rotation angle
+   * @param {Point} point
+   * @param {Point} center
+   * @return {Point} new point containing the turned coordinates
+   */
   function rotate2D( s, c, point, center )
   {
     var ret = new Object;
@@ -72,7 +106,14 @@ JSFLOORPLAN3D= function () {
     return ret;
   }
   
-  // calculate the translation of a cartesian 2D point
+  /**
+   * Calculate the translation of a cartesian 2D point.
+   * @method translate2D
+   * @private
+   * @param {Point} point
+   * @param {Point} translation vector
+   * @return {Point} new point containing the turned coordinates
+   */
   function translate2D( point, translation )
   {
     var ret = new Object;
@@ -81,7 +122,14 @@ JSFLOORPLAN3D= function () {
     return ret;
   }
   
-  // sort two 2D unit(!) vectors clockwise
+  /**
+   * Sort two 2D unit(!) vectors clockwise
+   * @method vecSort
+   * @private
+   * @param {Point} a Unit vector
+   * @param {Point} b Unit vector
+   * @return {Float} Order
+   */
   function vecSort( a, b )
   {
     var pseudoangle_a = a.y>=0 ? (1-a.x) : (a.x+3);  
@@ -99,7 +147,11 @@ JSFLOORPLAN3D= function () {
   
   var noFloorplan = true;
   
-  //return { parseXMLFloorPlan: function( xmlDoc )
+  /**
+   * Parse and create internal structure for the floor plan.
+   * @method parseXMLFloorPlan
+   * @param {XMLDom} xmlDoc
+   */
   JSFloorPlan3D.parseXMLFloorPlan = function( xmlDoc )
   {
     noFloorplan = false;
@@ -491,7 +543,22 @@ JSFLOORPLAN3D= function () {
     //}
   };
   
+  /**
+   * Store all nodes. This is an hash of points.
+   * @property floorNodes
+   * @type Hash
+   * @private
+   */
   var floorNodes = new Object(); 
+  /**
+   * Fill the <code>floorNodes</code> structure with the nodes from the
+   * config file.
+   * @method parseFloorNodes
+   * @private
+   * @param {XMLDom} node
+   * @param {Float}  floorheight The generic height of this floor that might be
+   *                             overwritten by individual nodes.
+   */
   function parseFloorNodes( nodes, floorheight )
   {
     for( var i=0; i < nodes.childNodes.length; i++ )
@@ -527,7 +594,21 @@ JSFLOORPLAN3D= function () {
     }
   }
   
+  /**
+   * Store all walls. This is an arry of <code>wall</code> objects.
+   * @property floorWalls
+   * @type Array
+   * @private
+   */
   var floorWalls = new Array(); 
+  
+  /**
+   * Fill the <code>floorWalls</code> structure with the wall elements from the
+   * config file.
+   * @method parseFloorWalls
+   * @private
+   * @param {XMLDom} nodeGroup
+   */
   function parseFloorWalls( nodes )
   {
     for( var i=0; i < nodes.childNodes.length; i++ )
@@ -535,17 +616,58 @@ JSFLOORPLAN3D= function () {
       node = nodes.childNodes[i];
       if (node.nodeType != ELEMENT_NODE) continue;
       
+      /**
+       * Contain all informations known about a wall.
+       * @class wall
+       * @for JSFLOORPLAN3D
+       */
       var wall = new Object;
+      /**
+       * @property start ID of the start node
+       * @type ID-String
+       */
       wall.start       = node.getAttribute('start'      );
+      /**
+       * @property startVertex
+       * @type Array
+       */
       wall.startVertex = new Array;
+      /**
+       * @property startOffset Offset at the start node
+       * @type Array
+       */
       wall.startOffset = Number( node.getAttribute('startoffset') );
+      /**
+       * @property end ID of the end node
+       * @type ID-String
+       */
       wall.end         = node.getAttribute('end'        );
+      /**
+       * @property endVertex 
+       * @type Array
+       */
       wall.endVertex   = new Array;
+      /**
+       * @property endOffset Offset at the end node
+       * @type Float
+       */
       wall.endOffset   = Number( node.getAttribute('endoffset'  ) );
+      /**
+       * @property thickness Thickness of the wall
+       * @type Float
+       */
       wall.thickness   = Number( node.getAttribute('thickness'  ) );
+      /**
+       * @property texture ID of the texture
+       * @type ID-String
+       */
       wall.texture     = node.getAttribute('texture'    );
       if( !wall.texture ) wall.texture = 0;
       
+      /**
+       * @property holes Array containing all holes in the wall
+       * @type Array
+       */
       wall.holes       = new Array;
       for( var j=0; j < node.childNodes.length; j++ )
       {
@@ -565,7 +687,22 @@ JSFLOORPLAN3D= function () {
     }
   }
   
+  /**
+   * Store all rooms. This is an array of arrays of Objects.
+   * @property rooms
+   * @type Array
+   * @private
+   */
   var rooms = new Array;
+  /**
+   * Fill the <code>rooms</code> array with the room elements from the
+   * config file.
+   * @method parseFloorRooms
+   * @for JSFLOORPLAN3D
+   * @private
+   * @param {XMLDom} nodeGroup
+   * @param {Integer} floor    The floor number.
+   */
   function parseFloorRooms( nodes, floor )
   {
     rooms[floor] = new Array;
@@ -601,6 +738,12 @@ JSFLOORPLAN3D= function () {
   }
   
   //var textures = new Object();
+  /**
+   * Dummy routine to handle textures.
+   * @method parseTextures
+   * @private
+   * @param {XMLDom} nodes
+   */
   function parseTextures( nodes )
   {
     return;
@@ -612,6 +755,11 @@ JSFLOORPLAN3D= function () {
   }
   
   var noSetup = true;
+  /**
+   * Setup the whole scene
+   * @method setup3D
+   * @private
+   */
   function setup3D()
   {
     if( noFloorplan ) return;
@@ -636,6 +784,15 @@ JSFLOORPLAN3D= function () {
     selectChange( 'showFloor'     );
   }
   
+  /**
+   * Show the floor plan by updating the relevant view parameters and calling
+   * the render() method
+   * @method show3D
+   * @param {Integer} rotation The direction to look at. 0° = North, 180° = 
+   *                           South
+   * @param {Integer} tilt     The amount of tilting the vire. 0° = no tilt, 
+   *                           90° = bird eyes view
+   */
   JSFloorPlan3D.show3D = function( rotation, tilt )
   {
     if( noSetup ) setup3D();
