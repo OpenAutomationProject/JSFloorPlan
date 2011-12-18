@@ -1,29 +1,43 @@
-/*************************************************************************** 
- *                                                                         * 
- *  JavaScript FloorPlan 3D                                                * 
- *                                                                         * 
- *   Copyright (C) 2009, 2010 by Christian Mayer                           *
- *   jsfloorplan (at) ChristianMayer.de                                    *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- *                                                                         * 
- * @module JSFloorPlan3D                                                   *
- ***************************************************************************/
+//
+//  JavaScript FloorPlan 3D.
+//
+//   Copyright (C) 2009, 2010 by Christian Mayer
+//   jsfloorplan (at) ChristianMayer.de
+//
+//   This program is free software; you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation; either version 2 of the License, or
+//   (at your option) any later version.
+//
+//   This program is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with this program; if not, write to the
+//   Free Software Foundation, Inc.,
+//   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+//
+//////////////////////////////////////////////////////////////////////////////
 
-// setup script here:
+/**
+ * The JSFLOORPLAN3D object is the single global object created by the
+ * JSFloorPlan 3D library.
+ * @module JSFloorPlan3D
+ * @title  JS Floor Plan 3D
+ */
+if (typeof JSFLOORPLAN3D == 'undefined' || !JSFLOORPLAN3D)
+{
+  /**
+   * The JSFLOORPLAN3D global namespace object. If JSFLOORPLAN3D is already
+   * defined, the existing JSFLOORPLAN3D object will not be overwritten so
+   * that defined namespaces are preserved.
+   * @class JSFLOORPLAN3D
+   * @static
+   */
+  var JSFLOORPLAN3D = {};
+}
 
 // don't change anything below:
 var ELEMENT_NODE = 1;
