@@ -39,6 +39,8 @@ if (typeof JSFLOORPLAN3D == 'undefined' || !JSFLOORPLAN3D)
   var JSFLOORPLAN3D = {};
 }
 
+JSFLOORPLAN3D= function () {
+var JSFloorPlan3D = this;
 // don't change anything below:
 var ELEMENT_NODE = 1;
 
@@ -87,20 +89,22 @@ function vecSort( a, b )
   return pseudoangle_a - pseudoangle_b; 
 }
 
-function loadFloorplan()
-{
-  $.get('floorplan01.xml', parseXMLFloorPlan, 'xml');
-}
+//function loadFloorplan()
+//{
+//  $.get('floorplan01.xml', parseXMLFloorPlan, 'xml');
+//}
 var floor;
 
 // this array will contain all vertices to show in the svg
 var vertices = Array();
 // infos about the building
-var buildingProperties = { floor: [], Object3D: new THREE.Object3D() };
+JSFloorPlan3D.buildingProperties = { floor: [], Object3D: new THREE.Object3D() };
 var imageCenter = new Object;
 
 var noFloorplan = true;
-function parseXMLFloorPlan( xmlDoc )
+
+//return { parseXMLFloorPlan: function( xmlDoc )
+JSFloorPlan3D.parseXMLFloorPlan = function( xmlDoc )
 {
   noFloorplan = false;
 
@@ -135,16 +139,16 @@ function parseXMLFloorPlan( xmlDoc )
         "Expected: 'floor', found '" + floor.tagName + "'" );
     
     floorCount++;
-    buildingProperties.floor[floorCount] = {};
+    JSFloorPlan3D.buildingProperties.floor[floorCount] = {};
     
     var floorName = floor.getAttribute('name');
-    buildingProperties.floor[floorCount].name = floorName;
+    JSFloorPlan3D.buildingProperties.floor[floorCount].name = floorName;
     
     var floorheight = Number( floor.getAttribute('height') );
-    buildingProperties.floor[floorCount].height = floorheight;
-    buildingProperties.floor[floorCount].heightOfGround = heightOfGround;
+    JSFloorPlan3D.buildingProperties.floor[floorCount].height = floorheight;
+    JSFloorPlan3D.buildingProperties.floor[floorCount].heightOfGround = heightOfGround;
     
-    var floorWallsStart = floorWalls.length; 
+    var floorWallsStart = 0;// floorWalls.length;  <- not defined here yet...
 
     // iterate over the content of this floor
     for( var j=0; j < floor.childNodes.length; j++ )
@@ -472,23 +476,24 @@ function parseXMLFloorPlan( xmlDoc )
     Object3D.add( lineGroup );
     Object3D.add( wallGroup );
     
-    buildingProperties.floor[floorCount].Object3D = Object3D;
-    buildingProperties.floor[floorCount].nodeGroup = nodeGroup;
-    buildingProperties.floor[floorCount].lineGroup = lineGroup;
-    buildingProperties.floor[floorCount].wallGroup = wallGroup;
-    buildingProperties.Object3D.add( Object3D ); // add / link; note: we use that JavaScript is not copying objects but uses ref counting on them here!
+    JSFloorPlan3D.buildingProperties.floor[floorCount].Object3D = Object3D;
+    JSFloorPlan3D.buildingProperties.floor[floorCount].nodeGroup = nodeGroup;
+    JSFloorPlan3D.buildingProperties.floor[floorCount].lineGroup = lineGroup;
+    JSFloorPlan3D.buildingProperties.floor[floorCount].wallGroup = wallGroup;
+    JSFloorPlan3D.buildingProperties.Object3D.add( Object3D ); // add / link; note: we use that JavaScript is not copying objects but uses ref counting on them here!
     
     heightOfGround += floorheight;
   }  // end floor
 
-  buildingProperties.x_center =  (buildingProperties.x_max -  buildingProperties.x_min) / 2;
-  buildingProperties.y_center =  (buildingProperties.y_max -  buildingProperties.y_min) / 2;
-  imageCenter.x = buildingProperties.x_center;
-  imageCenter.y = buildingProperties.y_center;
-  imageCenter.z = buildingProperties.z_max / 2;
+  JSFloorPlan3D.buildingProperties.x_center =  (JSFloorPlan3D.buildingProperties.x_max -  JSFloorPlan3D.buildingProperties.x_min) / 2;
+  JSFloorPlan3D.buildingProperties.y_center =  (JSFloorPlan3D.buildingProperties.y_max -  JSFloorPlan3D.buildingProperties.y_min) / 2;
+  imageCenter.x = JSFloorPlan3D.buildingProperties.x_center;
+  imageCenter.y = JSFloorPlan3D.buildingProperties.y_center;
+  imageCenter.z = JSFloorPlan3D.buildingProperties.z_max / 2;
 
-  show3D( 35*Math.PI/180, 30*Math.PI/180 );
-}
+  JSFloorPlan3D.show3D( 35*Math.PI/180, 30*Math.PI/180 );
+//}
+};
 
 var floorNodes = new Object(); 
 function parseFloorNodes( nodes, floorheight )
@@ -507,21 +512,21 @@ function parseFloorNodes( nodes, floorheight )
 
     floorNodes[id] = point;
 
-    if( undefined == buildingProperties.x_min ) 
+    if( undefined == JSFloorPlan3D.buildingProperties.x_min ) 
     {
-      buildingProperties.x_min = point.x;
-      buildingProperties.x_max = point.x;
-      buildingProperties.y_min = point.y;
-      buildingProperties.y_max = point.y;
-      buildingProperties.z_min = point.z;
-      buildingProperties.z_max = point.z;
+      JSFloorPlan3D.buildingProperties.x_min = point.x;
+      JSFloorPlan3D.buildingProperties.x_max = point.x;
+      JSFloorPlan3D.buildingProperties.y_min = point.y;
+      JSFloorPlan3D.buildingProperties.y_max = point.y;
+      JSFloorPlan3D.buildingProperties.z_min = point.z;
+      JSFloorPlan3D.buildingProperties.z_max = point.z;
     } else {
-      if( buildingProperties.x_min > point.x ) buildingProperties.x_min = point.x;
-      if( buildingProperties.x_max < point.x ) buildingProperties.x_max = point.x;
-      if( buildingProperties.y_min > point.y ) buildingProperties.y_min = point.y;
-      if( buildingProperties.y_max < point.y ) buildingProperties.y_max = point.y;
-      if( buildingProperties.z_min > point.z ) buildingProperties.z_min = point.z;
-      if( buildingProperties.z_max < point.z ) buildingProperties.z_max = point.z;
+      if( JSFloorPlan3D.buildingProperties.x_min > point.x ) JSFloorPlan3D.buildingProperties.x_min = point.x;
+      if( JSFloorPlan3D.buildingProperties.x_max < point.x ) JSFloorPlan3D.buildingProperties.x_max = point.x;
+      if( JSFloorPlan3D.buildingProperties.y_min > point.y ) JSFloorPlan3D.buildingProperties.y_min = point.y;
+      if( JSFloorPlan3D.buildingProperties.y_max < point.y ) JSFloorPlan3D.buildingProperties.y_max = point.y;
+      if( JSFloorPlan3D.buildingProperties.z_min > point.z ) JSFloorPlan3D.buildingProperties.z_min = point.z;
+      if( JSFloorPlan3D.buildingProperties.z_max < point.z ) JSFloorPlan3D.buildingProperties.z_max = point.z;
     }
   }
 }
@@ -616,7 +621,7 @@ function setup3D()
   if( noFloorplan ) return;
   noSetup = false;
   
-  scene.add( buildingProperties.Object3D );
+  scene.add( JSFloorPlan3D.buildingProperties.Object3D );
   
   var showFloor = showStates.showFloor;
   
@@ -635,7 +640,7 @@ function setup3D()
   selectChange( 'showFloor'     );
 }
 
-function show3D( rotation, tilt )
+JSFloorPlan3D.show3D = function( rotation, tilt )
 {
   if( noSetup ) setup3D();
   
@@ -643,10 +648,10 @@ function show3D( rotation, tilt )
   var cx = -Math.cos(rotation) * Math.cos(tilt);
   var cy =  Math.sin(rotation) * Math.cos(tilt);
   var cz =  Math.sin(tilt);
-  var heightOfGround = buildingProperties.floor[ showStates.showFloor ].heightOfGround;
-  var target = new THREE.Vector3( buildingProperties.x_center, buildingProperties.y_center, heightOfGround);
+  var heightOfGround = JSFloorPlan3D.buildingProperties.floor[ showStates.showFloor ].heightOfGround;
+  var target = new THREE.Vector3( JSFloorPlan3D.buildingProperties.x_center, JSFloorPlan3D.buildingProperties.y_center, heightOfGround);
   camera.up = new THREE.Vector3( Math.cos(rotation) * Math.sin(tilt), -Math.sin(rotation) * Math.sin(tilt), Math.cos(tilt) );
-  camera.position = new THREE.Vector3( cx*dist + buildingProperties.x_center, cy*dist + buildingProperties.y_center, dist * cz + heightOfGround);
+  camera.position = new THREE.Vector3( cx*dist + JSFloorPlan3D.buildingProperties.x_center, cy*dist + JSFloorPlan3D.buildingProperties.y_center, dist * cz + heightOfGround);
   camera.lookAt( target );
   pointLight.position = camera.position;
   
@@ -695,3 +700,5 @@ function show3D( rotation, tilt )
   
   render();
 }
+
+};//());
