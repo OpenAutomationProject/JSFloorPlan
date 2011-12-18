@@ -365,11 +365,23 @@ function parseXMLFloorPlan( xmlDoc )
       var sId, eId;
       for( var v = 0; v < Tvertices.length; v++ )
       {
+        /* prepare for later...
+        // project s1, e1 and s2, e2 onto line sm->em
+        var lSquaredInv = 1.0 / ((em.x-sm.x)*(em.x-sm.x) + (em.y-sm.y)*(em.y-sm.y));
+        var s1f = 1-((s1.x-sm.x)*(em.x-sm.x) + (s1.y-sm.y)*(em.y-sm.y))*lSquaredInv;
+        var e1f = 1-((e1.x-sm.x)*(em.x-sm.x) + (e1.y-sm.y)*(em.y-sm.y))*lSquaredInv;
+        var s2f = 1-((s2.x-sm.x)*(em.x-sm.x) + (s2.y-sm.y)*(em.y-sm.y))*lSquaredInv;
+        var e2f = 1-((e2.x-sm.x)*(em.x-sm.x) + (e2.y-sm.y)*(em.y-sm.y))*lSquaredInv;
+        
         var tv = Tvertices[v];
-        var x1 = s1.x * tv.x + e1.x * (1 - tv.x);
-        var x2 = s2.x * tv.x + e2.x * (1 - tv.x);
-        var y1 = s1.y * tv.x + e1.y * (1 - tv.x);
-        var y2 = s2.y * tv.x + e2.y * (1 - tv.x);
+        var tvx1 = Math.min( 1.0, Math.max( 0.0, (tv.x - s1f) * (e1f - s1f) ) ); // map between s1 and e1
+        var tvx2 = Math.min( 1.0, Math.max( 0.0, (tv.x - s2f) * (e2f - s2f) ) ); // map between s2 and e2
+        var x1 = s1.x * tvx1 + e1.x * (1 - tvx1);
+        var x2 = s2.x * tvx2 + e2.x * (1 - tvx2);
+        var y1 = s1.y * tvx1 + e1.y * (1 - tvx1);
+        var y2 = s2.y * tvx2 + e2.y * (1 - tvx2);
+        console.log( sm, em, s1, e1, tvx1, x1, y1, s2, e2, tvx2, x2, y2 );
+        */
         var z = heightOfGround + sh*tv.y;
         if( wallSideOrder > 0 )
         {
