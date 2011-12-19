@@ -24,8 +24,112 @@
 /**
  * The JSFLOORPLAN3D object is the single global object created by the
  * JSFloorPlan 3D library.
- * @module JSFloorPlan3D
- * @title  JS Floor Plan 3D
+ * <p/>
+ * The definition of the config file is:
+ * <pre>
+ * &nbsp;&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+ * &nbsp;&lt;building name="MyBuilding" orientation="45"&gt;
+ * &nbsp;  &lt;floor name="UG" height="2.44"&gt;
+ * &nbsp;    &lt;nodes&gt;
+ * &nbsp;      &lt;node id="1" x="5.51" y="0" z="0.9" /&gt;
+ * &nbsp;      ...
+ * &nbsp;    &lt;/nodes&gt;
+ * &nbsp;    &lt;walls&gt;
+ * &nbsp;      &lt;wall start="1" end="2" thickness=".24" texture="wall"&gt;
+ * &nbsp;        &lt;hole id="door01" distance="0.3" width="0.88" paparet="0.0" lintel="0.2" /&gt;
+ * &nbsp;        ...
+ * &nbsp;      &lt;/wall&gt;
+ * &nbsp;      ...
+ * &nbsp;    &lt;/walls&gt;
+ * &nbsp;    &lt;rooms&gt;
+ * &nbsp;      &lt;room name="Bad"&gt;
+ * &nbsp;        &lt;zone name="all" onclick="alert('Bad')"&gt;
+ * &nbsp;          &lt;corner nodeid="1" /&gt;
+ * &nbsp;          ...
+ * &nbsp;        &lt;/zone&gt;
+ * &nbsp;        ...
+ * &nbsp;      &lt;/room&gt;
+ * &nbsp;    &lt;/rooms&gt;
+ * &nbsp;  &lt;/floor&gt;
+ * &nbsp;  ...
+ * &nbsp;  &lt;textues&gt;
+ * &nbsp;    &lt;texture /&gt;
+ * &nbsp;    ...
+ * &nbsp;  &lt;/textures&gt;
+ * &nbsp;&lt;/building&gt;
+ * </pre>
+ * 
+ * The elements used are:
+ * <dl>
+ *   <dt><code><b>&lt;building&gt;</b></code></dt>
+ *   <dd>The attribute <code>orientation</code> defines a rotation of the local
+ *       coordinate system to north.
+ *       <ul>
+ *         <li><code>orientation="0"</code> means that the x axis is looking 
+ *             north and the y axis is looking east.</li>
+ *         <li><code>orientation="90"</code> means that the x axis is looking 
+ *             west and the y axis is looking south.</li>
+ *       </ul>
+ *   </dd>
+ *   <dt><code><b>&lt;floor&gt;</b></code></dt>
+ *   <dd>The <code>floor</code> element contains all relevant information 
+ *       about one floor of the building. The <code>name</code> attribute
+ *       gives this floor its name and the <code>height</code> attribute 
+ *       defines the (maximum) height.
+ *   </dd>
+ *   <dt><code><b>&lt;nodes&gt;</b></code></dt>
+ *   <dd>The contianer to contain all <code>node</code> elements of the floor.
+ *   </dd>
+ *   <dt><code><b>&lt;node&gt;</b></code></dt>
+ *   <dd>A <code>node</code> is a point in x/y space where walls meet. It's the
+ *       middle of all walls. If the walls have different thicknesses it might
+ *       be necessary got define an offset in the corresponding <code>wall</code>
+ *       element.<br />
+ *       The <code>z</code> is optional and needed if this point of meeting 
+ *       walls is lower than the usual wall height. This might be used for a 
+ *       balustrade.
+ *   </dd>
+ *   <dt><code><b>&lt;walls&gt;</b></code></dt>
+ *   <dd>The contianer to contain all <code>wall</code> elements of the floor.
+ *   </dd>
+ *   <dt><code><b>&lt;wall&gt;</b></code></dt>
+ *   <dd>The <code>wall</code> element defines one visible wall that is spanned
+ *       between the nodes with the IDs defined by the attributes 
+ *       <code>start</code> and <code>end</code>. The wall thickness is
+ *       defined by the attribute <code>thickness</code>
+ *   </dd>
+ *   <dt><code><b>&lt;hole&gt;</b></code></dt>
+ *   <dd>The <code>hole</code> element defines a hole in the wall, e.g. for a
+ *       door or a window. It starts from the start node after 
+ *       <code>distance</code> meters and has a width as defined by the 
+ *       <code>width</code> attribute. The bottom is defined by the 
+ *       <code>paparet</code> attribute (so it's usually 0.0 for a door) and
+ *       the top is defined by the <code>lintel</code> attribute.
+ *   </dd>
+ *   <dt><code><b>&lt;rooms&gt;</b></code></dt>
+ *   <dd>The contianer of all rooms in this floor.
+ *   </dd>
+ *   <dt><code><b>&lt;room&gt;</b></code></dt>
+ *   <dd>The contianer to hold all information about a room. The name of the 
+ *       room is defined by the <code>name</code> attribute.
+ *   </dd>
+ *   <dt><code><b>&lt;zone&gt;</b></code></dt>
+ *   <dd>A room might consist out of multiple zones. But at least one is needed.
+ *   </dd>
+ *   <dt><code><b>&lt;corner&gt;</b></code></dt>
+ *   <dd>Defining the corners of the zone by having the node IDs in the
+ *       <code>nodeid</code> attribute.
+ *   </dd>
+ *   <dt><code><b>&lt;textues&gt;</b></code></dt>
+ *   <dd>Container for the <code>texture</code> Elements.
+ *   </dd>
+ *   <dt><code><b>&lt;texture&gt;</b></code></dt>
+ *   <dd>Currently unsued. In future the definition of the texture files.
+ *   </dd>
+ * </dl>
+ * 
+ * @module JavaScript FloorPlan 3D
+ * @title  JS FloorPlan 3D
  * @reqires jQuery, Three.js
  */
 if (typeof JSFLOORPLAN3D == 'undefined' || !JSFLOORPLAN3D)
@@ -42,7 +146,7 @@ if (typeof JSFLOORPLAN3D == 'undefined' || !JSFLOORPLAN3D)
  * @class JSFLOORPLAN3D
  * @constructor FOO
  */
-JSFLOORPLAN3D= function () {
+JSFLOORPLAN3D = function () {
   ////////////////////////////////////////////////////////////////////////////
   // Definition of the private variables
   
