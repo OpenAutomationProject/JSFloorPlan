@@ -564,23 +564,30 @@ JSFLOORPLAN3D = function () {
         var wall1vertices = [];
         var wall2vertices = [];
         var sId, eId;
+        var l1SquaredInv = 1.0 / ((e1.x-s1.x)*(e1.x-s1.x) + (e1.y-s1.y)*(e1.y-s1.y));
+        var l1SquaredInv = 1.0 / ((e2.x-s2.x)*(e2.x-s2.x) + (e2.y-s2.y)*(e2.y-s2.y));
         for( var v = 0; v < Tvertices.length; v++ )
         {
-          // project s1, e1 and s2, e2 onto line sm->em
-          var lSquaredInv = 1.0 / ((em.x-sm.x)*(em.x-sm.x) + (em.y-sm.y)*(em.y-sm.y));
-          var s1f = 1-((s1.x-sm.x)*(em.x-sm.x) + (s1.y-sm.y)*(em.y-sm.y))*lSquaredInv;
-          var e1f = 1-((e1.x-sm.x)*(em.x-sm.x) + (e1.y-sm.y)*(em.y-sm.y))*lSquaredInv;
-          var s2f = 1-((s2.x-sm.x)*(em.x-sm.x) + (s2.y-sm.y)*(em.y-sm.y))*lSquaredInv;
-          var e2f = 1-((e2.x-sm.x)*(em.x-sm.x) + (e2.y-sm.y)*(em.y-sm.y))*lSquaredInv;
-          
           var tv = Tvertices[v];
-          var tvx1 = Math.min( 1.0, Math.max( 0.0, (tv.x - s1f) * (e1f - s1f) ) ); // map between s1 and e1
-          var tvx2 = Math.min( 1.0, Math.max( 0.0, (tv.x - s2f) * (e2f - s2f) ) ); // map between s2 and e2
-          var x1 = s1.x * tvx1 + e1.x * (1 - tvx1);
-          var x2 = s2.x * tvx2 + e2.x * (1 - tvx2);
-          var y1 = s1.y * tvx1 + e1.y * (1 - tvx1);
-          var y2 = s2.y * tvx2 + e2.y * (1 - tvx2);
-          //console.log( sm, em, s1, e1, tvx1, x1, y1, s2, e2, tvx2, x2, y2 );
+          
+          // get point in building space:
+          var tm = { 
+            x: sm.x * (1-tv.x) + em.x * tv.x , 
+            y: sm.y * (1-tv.x) + em.y * tv.x 
+          };
+          
+          // project it onto s1->e1
+          var f1 = ((tm.x-s1.x)*(e1.x-s1.x) + (tm.y-s1.y)*(e1.y-s1.y))*l1SquaredInv;
+          if( tv.x == 0.0 || tv.x == 1.0 ) f1 = 1-tv.x; // special case on concave wall bend
+          var x1 = s1.x * (1-f1) + e1.x * f1;
+          var y1 = s1.y * (1-f1) + e1.y * f1;
+          
+          // project it onto s2->e2
+          var f2 = ((tm.x-s2.x)*(e2.x-s2.x) + (tm.y-s2.y)*(e2.y-s2.y))*l1SquaredInv;
+          if( tv.x == 0.0 || tv.x == 1.0 ) f2 = 1-tv.x; // special case on concave wall bend
+          var x2 = s2.x * (1-f2) + e2.x * f2;
+          var y2 = s2.y * (1-f2) + e2.y * f2;
+                      
           var z = heightOfGround + sh*tv.y;
           if( wallSideOrder > 0 )
           {
