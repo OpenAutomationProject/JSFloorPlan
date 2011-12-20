@@ -222,27 +222,10 @@ JSFLOORPLAN3D = function () {
   }
   
   /**
-   * calculate the rotation of a cartesian 2D point around the center
-   * @method rotate2D
-   * @private
-   * @param {Float} angle Rotation angle
-   * @param {Point} point
-   * @param {Point} center
-   * @return {Point} new point containing the turned coordinates
-   */
-  function rotate2D( angle, point, center )
-  {
-    var s = Math.sin( angle );
-    var c = Math.cos( angle );
-    var ret = new Object;
-    ret.x = center.x + c * (point.x-center.x) - s * (point.y-center.y);
-    ret.y = center.y + s * (point.x-center.x) + c * (point.y-center.y);
-    return ret;
-  }
-  
-  /**
    * Calculate the rotation of a cartesian 2D point around the center
-   * but with given sin and cos of the angle.
+   * but with given sin and cos of the angle. <br />
+   * Note: This method might also be used in a three argument form where the
+   * first argument is the angle (and not it's sin/cos pair).
    * @method rotate2D
    * @private
    * @param {Float} s Sin of the rotation angle
@@ -253,6 +236,14 @@ JSFLOORPLAN3D = function () {
    */
   function rotate2D( s, c, point, center )
   {
+    if( rotate2D.arguments.length == 3 )
+    {
+      center = rotate2D.arguments[2];
+      point =  rotate2D.arguments[1];
+      c = Math.cos( rotate2D.arguments[0] );
+      s = Math.sin( rotate2D.arguments[0] );
+    }
+    
     var ret = new Object;
     ret.x = center.x + c * (point.x-center.x) - s * (point.y-center.y);
     ret.y = center.y + s * (point.x-center.x) + c * (point.y-center.y);
