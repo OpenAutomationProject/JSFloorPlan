@@ -330,7 +330,7 @@ JSFLOORPLAN3D = function () {
       JSFloorPlan3D.buildingProperties.floor[floorCount].height = floorheight;
       JSFloorPlan3D.buildingProperties.floor[floorCount].heightOfGround = heightOfGround;
       
-      var floorWallsStart = 0;// floorWalls.length;  <- not defined here yet...
+      var floorWallsStart = floorWalls.length;
       
       // iterate over the content of this floor
       for( var j=0; j < floor.childNodes.length; j++ )
