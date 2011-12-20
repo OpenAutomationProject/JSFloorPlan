@@ -21,6 +21,12 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+/**
+ * The "Example helpers" module contains all the JavaScript functions that are
+ * needed to show the example.
+ * @module JS FloorPlan 3D Example
+ */
+
 j = new JSFLOORPLAN3D();
 function loadFloorplan()
 {
@@ -148,8 +154,8 @@ pointLight.position.z = 130;
 // add to the scene
 //scene.add(pointLight);
 
-var lightDirection = 3.9;
-var lightHeight    = 0.25;
+var lightAzimut    = 3.9;
+var lightElevation = 0.25;
 var lightStrength  = 80;
 var lightDistance  = 50;
 //var sunLight = new THREE.PointLight( 0xFFFFFF );
@@ -452,8 +458,8 @@ function updateSlider()
   globalInUpdateSlider = true;
   var rollAngle = (roll * 180/Math.PI);
   var tiltAngle = (tilt * 180/Math.PI);
-  var lightDirectionAngle = (lightDirection * 180/Math.PI);
-  var lightHeightAngle    = (lightHeight    * 180/Math.PI);
+  var lightDirectionAngle = (lightAzimut    * 180/Math.PI);
+  var lightHeightAngle    = (lightElevation * 180/Math.PI);
   $( "#rollSlider" ).slider( "option", "value", rollAngle );
   $( "#tiltSlider" ).slider( "option", "value", tiltAngle );
   $( "#distSlider" ).slider( "option", "value", dist      );
@@ -488,14 +494,14 @@ function distChange( event, ui )
 function lightDirectionChange( event, ui ) 
 { 
   if( globalInUpdateSlider ) return true;
-  lightDirection = ui.value * Math.PI / 180;
+  lightAzimut = ui.value * Math.PI / 180;
   j.show3D( roll, tilt );
 }
 
 function lightHeightChange( event, ui ) 
 { 
   if( globalInUpdateSlider ) return true;
-  lightHeight = ui.value * Math.PI / 180;
+  lightElevation = ui.value * Math.PI / 180;
   j.show3D( roll, tilt );
 }
 

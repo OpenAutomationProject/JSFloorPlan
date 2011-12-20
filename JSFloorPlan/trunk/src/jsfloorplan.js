@@ -65,11 +65,14 @@
  *   <dd>The attribute <code>orientation</code> defines a rotation of the local
  *       coordinate system to north.
  *       <ul>
- *         <li><code>orientation="0"</code> means that the x axis is looking 
- *             north and the y axis is looking east.</li>
- *         <li><code>orientation="90"</code> means that the x axis is looking 
- *             west and the y axis is looking south.</li>
+ *         <li><code>orientation="0"</code> means that the y axis is looking 
+ *             north and the x axis is looking east.</li>
+ *         <li><code>orientation="90"</code> means that the y axis is looking 
+ *             east and the x axis is looking south.</li>
  *       </ul>
+ *       Note: As the z axis points upwards this is a right handed coordinate
+ *             system.
+ *       <img src="assets/coordinate_system.png" />
  *   </dd>
  *   <dt><code><b>&lt;floor&gt;</b></code></dt>
  *   <dd>The <code>floor</code> element contains all relevant information 
@@ -905,32 +908,32 @@ JSFLOORPLAN3D = function () {
    * Show the floor plan by updating the relevant view parameters and calling
    * the render() method
    * @method show3D
-   * @param {Integer} rotation The direction to look at. 0° = North, 180° = 
-   *                           South
-   * @param {Integer} tilt     The amount of tilting the vire. 0° = no tilt, 
-   *                           90° = bird eyes view
+   * @param {Integer} azmiut   The direction of the camera. 0° = North, 90° = 
+   *                           East.
+   * @param {Integer} elevation The amount of tilting the view. 0° = no tilt, 
+   *                            90° = bird eyes view
    */
-  JSFloorPlan3D.show3D = function( rotation, tilt )
+  JSFloorPlan3D.show3D = function( azimut, elevation )
   {
     if( noSetup ) setup3D();
     
     // set up camera
-    var cx = -Math.cos(rotation) * Math.cos(tilt);
-    var cy =  Math.sin(rotation) * Math.cos(tilt);
-    var cz =  Math.sin(tilt);
+    var cx = Math.sin(azimut) * Math.cos(elevation);
+    var cy = Math.cos(azimut) * Math.cos(elevation);
+    var cz = Math.sin(elevation);
     var heightOfGround = JSFloorPlan3D.buildingProperties.floor[ showStates.showFloor ].heightOfGround;
     var target = new THREE.Vector3( JSFloorPlan3D.buildingProperties.x_center, JSFloorPlan3D.buildingProperties.y_center, heightOfGround);
-    camera.up = new THREE.Vector3( Math.cos(rotation) * Math.sin(tilt), -Math.sin(rotation) * Math.sin(tilt), Math.cos(tilt) );
+    camera.up = new THREE.Vector3( -Math.sin(azimut) * Math.sin(elevation), -Math.cos(azimut) * Math.sin(elevation), Math.cos(elevation) );
     camera.position = new THREE.Vector3( cx*dist + JSFloorPlan3D.buildingProperties.x_center, cy*dist + JSFloorPlan3D.buildingProperties.y_center, dist * cz + heightOfGround);
     camera.lookAt( target );
     pointLight.position = camera.position;
     
     // set up sun
-    var sx = -Math.cos(lightDirection) * Math.cos(lightHeight);
-    var sy =  Math.sin(lightDirection) * Math.cos(lightHeight);
-    var sz =  Math.sin(lightHeight);
+    var sx = Math.sin(lightAzimut) * Math.cos(lightElevation);
+    var sy = Math.cos(lightAzimut) * Math.cos(lightElevation);
+    var sz = Math.sin(lightElevation);
     sunLight.target.position = target;
-    sunLight.position = new THREE.Vector3( sx * lightDistance, sy * lightDistance, sz * lightDistance );
+    sunLight.position = new THREE.Vector3( sx * lightDistance, sy * lightDistance, sz * lightDistance + heightOfGround);
     sunLight.intensity = lightStrength / 100.0;
     sunLightViewLine.geometry.vertices[0].position = sunLight.position;
     sunLightViewLine.geometry.vertices[1].position = sunLight.target.position;
