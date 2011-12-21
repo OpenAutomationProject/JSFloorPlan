@@ -519,4 +519,62 @@ function lightDistanceChange( event, ui )
   j.show3D( roll, tilt );
 }
 
-
+/**
+ * Calculate the position of the sun based on a simplified formula from
+ * http://en.wikipedia.org/wiki/Altitude_(astronomy)
+ * @class getSunPosition
+ * @constructor
+ * 
+ * @param {Date} date
+ * @param {Number} latitude
+ * @param {Number} longitude
+ * @return {Object} azimuth, altitude
+ */
+function getSunPosition( date, latitude, longitude )
+{
+  /**
+   * Calculate the sun declination as described by
+   * http://en.wikipedia.org/wiki/Altitude_(astronomy)
+   * @method sunDeclination
+   * @private
+   * @param {Date} date
+   * @return {Number}
+   */
+  function sunDeclination( date )
+  {
+    var startOfYear = new Date( date.getUTCFullYear(), 1, 1, 0, 0, 0 );
+    var N = (date - startOfYear) /1000/60/60/24; // days since beginning of the year
+    return -23.45 * Math.PI / 180.0 * Math.cos( 2 * Math.PI * (N+10) / 365 );
+  }
+  
+  /**
+   * Calculate the true hour angle as described by
+   * http://en.wikipedia.org/wiki/Altitude_(astronomy)
+   * @method trueHourAngle
+   * @private
+   * @param {Date} date
+   * @param {longitude} Longitude in degrees.
+   * @return {Number}
+   */
+  function trueHourAngle( date, longitude )
+  {
+    var T = date.getHours() + date.getMinutes() / 60;
+    T += longitude / 15 + date.getTimezoneOffset() / 60;
+    // + correction of daylight saving?!?
+    // + correction of Equation of Time - if left out the error is ~ +/-15min
+    return (12 - T) * 15 * Math.PI / 180;
+  }
+  
+  var phi = latitude * Math.PI / 180;
+  var delta = sunDeclination( date );
+  var H = trueHourAngle( date, longitude );
+  var sin_a = Math.sin( phi ) * Math.sin( delta ) + Math.cos( phi ) * Math.cos( delta ) * Math.cos( H );
+  var cos_A_cos_a = Math.cos( phi ) * Math.sin( delta ) - Math.sin( phi ) * Math.cos( delta ) * Math.cos( H );
+  var sin_A_cos_a = -Math.cos( delta ) * Math.sin( H );
+  
+  var azimuth = Math.atan2( sin_A_cos_a, cos_A_cos_a );
+  return { 
+    azimuth:  azimuth * 180/Math.PI,
+    altitude: Math.atan2( sin_a, azimuth ) * 180/Math.PI
+  };
+} 
