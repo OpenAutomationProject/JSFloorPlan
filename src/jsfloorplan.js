@@ -196,6 +196,14 @@ JSFLOORPLAN3D = function () {
   var noSetup = true;
   
   /**
+   * Status if currently an animation is running
+   * @property inAnimation
+   * @type Bool
+   * @private
+   */
+  JSFloorPlan3D.inAnimation = false;
+  
+  /**
   * Constant representing the ID of an ELEMENT_NODE
   * @property ELEMENT_NODE
   * @private
@@ -1000,28 +1008,43 @@ JSFLOORPLAN3D = function () {
     
     // speed of the changing
     var steps = 100;
-    var rate = {
-      azimut:    ( azimut    - showStates.currentAzimut    ) / steps,
-      elevation: ( elevation - showStates.currentElevation ) / steps,
-      height:    ( height    - showStates.currentHeight    ) / steps
-    };
+    var rate = { azimut: 0.0, elevation: 0.0, height: 0.0 };
+    
+    function calcRate()
+    {
+      rate = { 
+        azimut:    ( azimut    - showStates.currentAzimut    ) / steps,
+        elevation: ( elevation - showStates.currentElevation ) / steps,
+        height:    ( height    - showStates.currentHeight    ) / steps
+      };
+    }
     
     function doMove()
     {
+      JSFloorPlan3D.inAnimation = true;
       var done = true;
       if( Math.abs( azimut    - showStates.currentAzimut     ) > Math.abs( rate.azimut    ) )
       {
+        if( rate.azimut    == 0.0 ) calcRate();
         showStates.currentAzimut     += rate.azimut;
+        if( Math.abs( azimut    - showStates.currentAzimut     ) < 1e-5 ) // clamp if close enough
+          showStates.currentAzimut = azimut;
         done = false;
       }
       if( Math.abs( elevation - showStates.currenteElevation ) > Math.abs( rate.elevation ) )
       {
+        if( rate.elevation == 0.0 ) calcRate();
         showStates.currentElevation += rate.elevation;
+        if( Math.abs( elevation - showStates.currenteElevation ) < 1e-5 ) // clamp if close enough
+          showStates.currenteElevation = elevation;
         done = false;
       }
       if( Math.abs( height    - showStates.currentHeight     ) > Math.abs( rate.height    ) )
       {
+        if( rate.height    == 0.0 ) calcRate();
         showStates.currentHeight    += rate.height;
+        if( Math.abs( height    - showStates.currentHeight     ) < 1e-4 ) // clamp if close enough
+          showStates.currentHeight = height;
         done = false;
       }
       
@@ -1030,10 +1053,16 @@ JSFLOORPLAN3D = function () {
       render();
       if( !done ) 
         window.requestAnimationFrame( doMove );
-      else if( delayedFn )
-        delayedFn();
+      else {
+        JSFloorPlan3D.inAnimation = false;
+        if( delayedFn )
+          delayedFn();
+      }
     }
     
-    doMove();
+    if( JSFloorPlan3D.inAnimation )
+      calcRate();
+    else
+      doMove();
   }
 };//());
