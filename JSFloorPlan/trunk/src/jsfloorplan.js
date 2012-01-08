@@ -565,7 +565,7 @@ JSFLOORPLAN3D = function () {
         var wall2vertices = [];
         var sId, eId;
         var l1SquaredInv = 1.0 / ((e1.x-s1.x)*(e1.x-s1.x) + (e1.y-s1.y)*(e1.y-s1.y));
-        var l1SquaredInv = 1.0 / ((e2.x-s2.x)*(e2.x-s2.x) + (e2.y-s2.y)*(e2.y-s2.y));
+        var l2SquaredInv = 1.0 / ((e2.x-s2.x)*(e2.x-s2.x) + (e2.y-s2.y)*(e2.y-s2.y));
         for( var v = 0; v < Tvertices.length; v++ )
         {
           var tv = Tvertices[v];
@@ -583,11 +583,11 @@ JSFLOORPLAN3D = function () {
           var y1 = s1.y * (1-f1) + e1.y * f1;
           
           // project it onto s2->e2
-          var f2 = ((tm.x-s2.x)*(e2.x-s2.x) + (tm.y-s2.y)*(e2.y-s2.y))*l1SquaredInv;
+          var f2 = ((tm.x-s2.x)*(e2.x-s2.x) + (tm.y-s2.y)*(e2.y-s2.y))*l2SquaredInv;
           if( tv.x == 0.0 || tv.x == 1.0 ) f2 = 1-tv.x; // special case on concave wall bend
           var x2 = s2.x * (1-f2) + e2.x * f2;
           var y2 = s2.y * (1-f2) + e2.y * f2;
-                      
+          
           var z = heightOfGround + sh*tv.y;
           if( wallSideOrder > 0 )
           {
@@ -902,6 +902,17 @@ JSFLOORPLAN3D = function () {
     selectChange( 'showFloor'     );
   }
   
+  function setupCamera( azimut, elevation, height, target )
+  {
+    var cx = Math.sin(azimut) * Math.cos(elevation);
+    var cy = Math.cos(azimut) * Math.cos(elevation);
+    var cz = Math.sin(elevation);
+    camera.up = new THREE.Vector3( -Math.sin(azimut) * Math.sin(elevation), -Math.cos(azimut) * Math.sin(elevation), Math.cos(elevation) );
+    camera.position = new THREE.Vector3( cx*dist + JSFloorPlan3D.buildingProperties.x_center, cy*dist + JSFloorPlan3D.buildingProperties.y_center, dist * cz + height );
+    camera.lookAt( target );
+    pointLight.position = camera.position;
+  }
+  
   /**
    * Show the floor plan by updating the relevant view parameters and calling
    * the render() method
@@ -916,15 +927,13 @@ JSFLOORPLAN3D = function () {
     if( noSetup ) setup3D();
     
     // set up camera
-    var cx = Math.sin(azimut) * Math.cos(elevation);
-    var cy = Math.cos(azimut) * Math.cos(elevation);
-    var cz = Math.sin(elevation);
     var heightOfGround = JSFloorPlan3D.buildingProperties.floor[ showStates.showFloor ].heightOfGround;
-    var target = new THREE.Vector3( JSFloorPlan3D.buildingProperties.x_center, JSFloorPlan3D.buildingProperties.y_center, heightOfGround);
-    camera.up = new THREE.Vector3( -Math.sin(azimut) * Math.sin(elevation), -Math.cos(azimut) * Math.sin(elevation), Math.cos(elevation) );
-    camera.position = new THREE.Vector3( cx*dist + JSFloorPlan3D.buildingProperties.x_center, cy*dist + JSFloorPlan3D.buildingProperties.y_center, dist * cz + heightOfGround);
-    camera.lookAt( target );
-    pointLight.position = camera.position;
+    var target = new THREE.Vector3( JSFloorPlan3D.buildingProperties.x_center, JSFloorPlan3D.buildingProperties.y_center, heightOfGround  );
+    setupCamera( azimut, elevation, heightOfGround, target );
+    
+    showStates.currentAzimut    = azimut;
+    showStates.currentElevation = elevation;
+    showStates.currentHeight    = heightOfGround;
     
     // set up sun
     var sx = Math.sin(lightAzimut) * Math.cos(lightElevation);
@@ -972,4 +981,59 @@ JSFLOORPLAN3D = function () {
     render();
   }
   
+  /**
+   * Move the displayed part of the floor plan to a new part
+   * @method moveTo
+   * @param {Integer}  floor     The number of the floor to show
+   * @param {Integer}  azmiut    The direction of the camera. 0° = North, 90° = 
+   *                             East.
+   * @param {Integer}  elevation The amount of tilting the view. 0° = no tilt, 
+   *                             90° = bird eyes view
+   * @param {Function} delayedFn (optional) Function to call after animation is
+   *                             finished
+   */
+  JSFloorPlan3D.moveTo = function( floor, azimut, elevation, delayedFn )
+  {
+    if( noSetup ) setup3D();
+    
+    var height = JSFloorPlan3D.buildingProperties.floor[ floor ].heightOfGround;
+    
+    // speed of the changing
+    var steps = 100;
+    var rate = {
+      azimut:    ( azimut    - showStates.currentAzimut    ) / steps,
+      elevation: ( elevation - showStates.currentElevation ) / steps,
+      height:    ( height    - showStates.currentHeight    ) / steps
+    };
+    
+    function doMove()
+    {
+      var done = true;
+      if( Math.abs( azimut    - showStates.currentAzimut     ) > Math.abs( rate.azimut    ) )
+      {
+        showStates.currentAzimut     += rate.azimut;
+        done = false;
+      }
+      if( Math.abs( elevation - showStates.currenteElevation ) > Math.abs( rate.elevation ) )
+      {
+        showStates.currentElevation += rate.elevation;
+        done = false;
+      }
+      if( Math.abs( height    - showStates.currentHeight     ) > Math.abs( rate.height    ) )
+      {
+        showStates.currentHeight    += rate.height;
+        done = false;
+      }
+      
+      var target = new THREE.Vector3( JSFloorPlan3D.buildingProperties.x_center, JSFloorPlan3D.buildingProperties.y_center, showStates.currentHeight );
+      setupCamera( showStates.currentAzimut, showStates.currentElevation, showStates.currentHeight, target );
+      render();
+      if( !done ) 
+        window.requestAnimationFrame( doMove );
+      else if( delayedFn )
+        delayedFn();
+    }
+    
+    doMove();
+  }
 };//());
