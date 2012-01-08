@@ -668,6 +668,7 @@ JSFLOORPLAN3D = function () {
         var mesh = new THREE.Mesh(geometry, cubeMaterial);
         mesh.castShadow    = true;
         mesh.receiveShadow = true;
+        //mesh.doubleSided = true;
         wallGroup.add(mesh);
       } // end for( j=0; j<floorWalls.length; j++ )
       Object3D.add( lineGroup );
@@ -961,7 +962,15 @@ JSFLOORPLAN3D = function () {
     }
     
     // update opacity
-    cubeMaterial.opacity = showStates.fillOpacity;
+    if( cubeMaterial.opacity != showStates.fillOpacity )
+    {
+      cubeMaterial.opacity = showStates.fillOpacity;
+      cubeMaterial.transparent = showStates.fillOpacity < 1.0;
+      cubeMaterial.depthTest   = !cubeMaterial.transparent;
+      THREE.SceneUtils.traverseHierarchy( JSFloorPlan3D.buildingProperties.Object3D, function( object ) {
+        object.doubleSided = cubeMaterial.transparent; 
+      });
+    }
     
     // update color
     switch( showStates.fillColor )
