@@ -248,16 +248,22 @@ var t_25d_end;
 function init()
 {
   $('input').change(function(e){
+    var old = showStates[ e.target.name ];
     showStates[ e.target.name ] = e.target.checked;
-    selectChange( e.target.name );
-    j.show3D( roll, tilt );
+    if( selectChange( e.target.name, old ) )
+    {
+      j.show3D( roll, tilt );
+    }
   }).each(function(){
     showStates[ this.name ] = this.checked; // init
   });
   $('select').change(function(e){
+    var old = showStates[ e.target.name ];
     showStates[ e.target.name ] = e.target.value;
-    selectChange( e.target.name );
-    j.show3D( roll, tilt );
+    if( selectChange( e.target.name, old ) )
+    {
+      j.show3D( roll, tilt );
+    }
   }).each(function(){
     showStates[ this.name ] = this.value; // init
   });
@@ -266,7 +272,7 @@ function init()
   createSlider();
 }
 
-function selectChange( name )
+function selectChange( name, old )
 {
   switch( name )
   {
@@ -287,17 +293,30 @@ function selectChange( name )
       break;
       
     case 'showFloor':
+      //showStates['showFloor'] = Number( showStates['showFloor'] );
+      var min = old < showStates['showFloor'] ? old : showStates['showFloor'];
+      var max = old > showStates['showFloor'] ? old : showStates['showFloor'];
       $( j.buildingProperties.floor ).each( function( number ){
         THREE.SceneUtils.traverseHierarchy( this.wallGroup, function( object ) {
-          object.visible = ( showStates['showFloor'] == number ); 
+          object.visible = ( (min <= number) && (number <= max) ); 
         });
       });
+      j.moveTo( showStates['showFloor'], roll, tilt, function(){
+        $( j.buildingProperties.floor ).each( function( number ){
+          THREE.SceneUtils.traverseHierarchy( this.wallGroup, function( object ) {
+            object.visible = ( showStates['showFloor'] == number ); 
+          });
+        });
+        j.show3D( roll, tilt );
+      });
+      return false;
       break;
       
     case 'showWireframe':
       cubeMaterial.wireframe = showStates['showWireframe'];
       break;
   }
+  return true;
 }
 
 var toggle = false;
