@@ -102,7 +102,7 @@ renderer.shadowMapWidth = SHADOW_MAP_WIDTH;
 renderer.shadowMapHeight = SHADOW_MAP_HEIGHT;
 renderer.shadowMapEnabled = true;
 //renderer.shadowMapSoft = true;
-
+var projector = new THREE.Projector();
 
 // set up the sphere vars
 var radius = 50, segments = 16, rings = 16;
@@ -209,6 +209,7 @@ function render() {
 /////////////////////////////////////////////////////////////////////////////
 $(function() {
   three_init();
+  $('#top_level').click( 'foo', j.translateMouseEvent );
 });
 /////////////////////////////////////////////////////////////////////////////
 // setup script here:

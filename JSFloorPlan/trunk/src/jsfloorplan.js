@@ -1074,4 +1074,84 @@ JSFLOORPLAN3D = function () {
     else
       doMove();
   }
+  
+  /**
+   * Check if point p is in the zone zone. It's basically a point-in-polygon
+   * test using a ray casting from left infinity to the point <code>p</code>.
+   */
+  function pointInZone( p, zone )
+  {
+    var crossing = 0;
+    var prevCorner = floorNodes[ zone.corners[zone.corners.length-1] ];
+    for( var i in zone.corners )
+    {
+      var corner = floorNodes[ zone.corners[i] ];
+      if(                                                // only intersection if
+        (prevCorner.x < p.x || corner.x < p.x )          // at least one point is left
+        &&                                               // and
+        ( (prevCorner.y - p.y) * (corner.y - p.y) < 0 )  // one corner is above and the other below
+      )
+      {
+        crossing++;
+      }
+      prevCorner = corner;
+    }
+    return crossing % 2; // odd number of crossings == inside
+  }
+  
+  /**
+   * Figur out the room that contains the point <code>p</code> in the floor <code>floor</code>.
+   */
+  JSFloorPlan3D.selectRoom = function( p, floor )
+  {
+    var thisFloor = rooms[floor];
+    for( var room in thisFloor )
+    {
+      var thisRoom = thisFloor[room];
+      for( var zone in thisRoom.zones )
+      {
+        if( pointInZone( p, thisRoom.zones[zone] ) )
+        {
+          console.log( 'in zone', thisRoom.zones[zone].name, 'in raum', thisFloor[room].name, 'in stock', floor );
+        }
+      }
+    }
+  }
+  
+  /**
+   * Project screen coordinate to building space
+   */
+  JSFloorPlan3D.sceen2building = function( x, y, h )
+  {
+    var vector = new THREE.Vector3( (x / WIDTH)*2-1, -(y / HEIGHT)*2+1, 0.5 );
+    projector.unprojectVector( vector, camera );
+    var dirVec = vector.subSelf( camera.position ).normalize()
+    var d = (h - camera.position.z) / dirVec.z;
+    return new THREE.Vector3( camera.position.x + d * dirVec.x, camera.position.y + d * dirVec.y, camera.position.z + d * dirVec.z );
+  }
+  
+  /**
+   * Project point in building space to screen space
+   */
+  JSFloorPlan3D.building2screen = function( p )
+  {
+    var screen = p.clone();
+    projector.projectVector( screen, camera );
+    return screen;
+  }
+  
+  /**
+   * This method can be used as an event handler for mouse events.
+   * @param {Event}    event               The jQuery event object.
+   * @param {Function} event.data.callback This callback function will be called
+   *                                       after the mouse event was translated
+   */
+  JSFloorPlan3D.translateMouseEvent = function( event )
+  {
+    console.log( JSFloorPlan3D.buildingProperties, showStates );
+    var thisFloor = JSFloorPlan3D.buildingProperties.floor[showStates.showFloor];
+    var height = thisFloor.heightOfGround + thisFloor.height;
+    var intersec = JSFloorPlan3D.sceen2building( event.offsetX, event.offsetY, height );
+    JSFloorPlan3D.selectRoom( intersec, showStates.showFloor );
+  }
 };//());
