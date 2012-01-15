@@ -30,7 +30,12 @@
 j = new JSFLOORPLAN3D();
 function loadFloorplan()
 {
-  $.get('floorplan01.xml', j.parseXMLFloorPlan, 'xml');
+  $.ajax({
+    url: 'floorplan01.xml',
+    success: j.parseXMLFloorPlan,
+    dataType: 'xml',
+    async: false
+  });
 }
 
 
@@ -195,7 +200,7 @@ if ( !window.requestAnimationFrame ) {
 function animate() {
   requestAnimationFrame( animate );
   //render();
-  j.show3D( roll, tilt );
+  j.show3D( roll, tilt, dist, target );
   //stats.update();
 }
 
@@ -206,10 +211,27 @@ function render() {
 
 //}
 
+function handleMouseClickEvent( event )
+{
+  if( event.room.room ) 
+  {
+    var room = event.room.room;
+    var zone = event.room.zone;
+    target.x = room.center.x;
+    target.y = room.center.y;
+    dist = room.size / Math.tan( VIEW_ANGLE * Math.PI/180 / 2 );
+  } else {
+    target.x = j.buildingProperties.x_center;
+    target.y = j.buildingProperties.y_center;
+    dist = j.buildingProperties.size / Math.tan( VIEW_ANGLE * Math.PI/180 / 2 );
+  }
+  updateSlider();
+  j.moveTo( showStates['showFloor'], roll, tilt, dist, target );
+}
 /////////////////////////////////////////////////////////////////////////////
 $(function() {
   three_init();
-  $('#top_level').click( 'foo', j.translateMouseEvent );
+  $('#top_level').css('border','1px solid black').click( {callback:handleMouseClickEvent}, j.translateMouseEvent );
 });
 /////////////////////////////////////////////////////////////////////////////
 // setup script here:
@@ -235,6 +257,7 @@ var roll = 35*Math.PI/180;
 var tilt = 30*Math.PI/180;
 var tilt_dir = 1;
 var dist = 10;
+var target = new THREE.Vector3();
   //var plan = createSVGElement( "g" );
 var f_avr = 0;
 var m_avr = 0;
@@ -253,7 +276,7 @@ function init()
     showStates[ e.target.name ] = e.target.checked;
     if( selectChange( e.target.name, old ) )
     {
-      j.show3D( roll, tilt );
+      j.show3D( roll, tilt, dist, target );
     }
   }).each(function(){
     showStates[ this.name ] = this.checked; // init
@@ -263,17 +286,20 @@ function init()
     showStates[ e.target.name ] = e.target.value;
     if( selectChange( e.target.name, old ) )
     {
-      j.show3D( roll, tilt );
+      j.show3D( roll, tilt, dist, target );
     }
   }).each(function(){
     showStates[ this.name ] = this.value; // init
   });
   
   loadFloorplan();
+  target.x = j.buildingProperties.x_center;
+  target.y = j.buildingProperties.y_center;
   createSlider();
+  render();
 }
 
-function selectChange( name, old )
+function selectChange( name, old, onlyInit )
 {
   switch( name )
   {
@@ -295,6 +321,17 @@ function selectChange( name, old )
       
     case 'showFloor':
       //showStates['showFloor'] = Number( showStates['showFloor'] );
+      if( onlyInit )
+      {
+        $( j.buildingProperties.floor ).each( function( number ){
+          THREE.SceneUtils.traverseHierarchy( this.wallGroup, function( object ) {
+            object.visible = ( showStates['showFloor'] == number ); 
+          });
+        });
+        target.z = j.buildingProperties.floor[ showStates['showFloor'] ].heightOfGround + 
+                   j.buildingProperties.floor[ showStates['showFloor'] ].height / 2;
+          return false;
+      }
       var min = old < showStates['showFloor'] ? old : showStates['showFloor'];
       var max = old > showStates['showFloor'] ? old : showStates['showFloor'];
       $( j.buildingProperties.floor ).each( function( number ){
@@ -302,13 +339,15 @@ function selectChange( name, old )
           object.visible = ( (min <= number) && (number <= max) ); 
         });
       });
-      j.moveTo( showStates['showFloor'], roll, tilt, function(){
+      target.z = j.buildingProperties.floor[ showStates['showFloor'] ].heightOfGround + 
+                 j.buildingProperties.floor[ showStates['showFloor'] ].height / 2;
+      j.moveTo( showStates['showFloor'], roll, tilt, dist, target, function(){
         $( j.buildingProperties.floor ).each( function( number ){
           THREE.SceneUtils.traverseHierarchy( this.wallGroup, function( object ) {
             object.visible = ( showStates['showFloor'] == number ); 
           });
         });
-        j.show3D( roll, tilt );
+        j.show3D( roll, tilt, dist, target );
       });
       return false;
       break;
@@ -348,7 +387,7 @@ function move()
   if( tilt < 0 )
     tilt_dir = 1;
 
-  j.show3D( roll, tilt );
+  j.show3D( roll, tilt, dist, target );
   //////
 
   var middle = new Date();
@@ -429,7 +468,7 @@ function check( what, redraw )
 
   if( redraw )
   {
-    j.show3D( roll, tilt, plan );
+    j.show3D( roll, tilt, dist, plan );
   }
 }
 */
@@ -453,7 +492,7 @@ function selectValue( what, redraw )
 
   if( redraw )
   {
-    j.show3D( roll, tilt, plan );
+    j.show3D( roll, tilt, dist, plan );
   }
 }
 */
@@ -494,49 +533,49 @@ function rollChange( event, ui )
 { 
   if( globalInUpdateSlider ) return true;
   roll = ui.value * Math.PI / 180;
-  j.show3D( roll, tilt );
+  j.show3D( roll, tilt, dist, target );
 }
 
 function tiltChange( event, ui ) 
 {
   if( globalInUpdateSlider ) return true;
   tilt = ui.value * Math.PI / 180;
-  j.show3D( roll, tilt );
+  j.show3D( roll, tilt, dist, target );
 }
 
 function distChange( event, ui ) 
 {
   if( globalInUpdateSlider ) return true;
   dist = ui.value;
-  j.show3D( roll, tilt );
+  j.show3D( roll, tilt, dist, target );
 }
 
 function lightDirectionChange( event, ui ) 
 { 
   if( globalInUpdateSlider ) return true;
   lightAzimut = ui.value * Math.PI / 180;
-  j.show3D( roll, tilt );
+  j.show3D( roll, tilt, dist, target );
 }
 
 function lightHeightChange( event, ui ) 
 { 
   if( globalInUpdateSlider ) return true;
   lightElevation = ui.value * Math.PI / 180;
-  j.show3D( roll, tilt );
+  j.show3D( roll, tilt, dist, target );
 }
 
 function lightStrengthChange( event, ui ) 
 {
   if( globalInUpdateSlider ) return true;
   lightStrength = ui.value;
-  j.show3D( roll, tilt );
+  j.show3D( roll, tilt, dist, target );
 }
 
 function lightDistanceChange( event, ui ) 
 {
   if( globalInUpdateSlider ) return true;
   lightDistance = ui.value;
-  j.show3D( roll, tilt );
+  j.show3D( roll, tilt, dist, target );
 }
 
 /**

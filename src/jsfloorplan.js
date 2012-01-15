@@ -685,11 +685,12 @@ JSFLOORPLAN3D = function () {
     
     JSFloorPlan3D.buildingProperties.x_center =  (JSFloorPlan3D.buildingProperties.x_max -  JSFloorPlan3D.buildingProperties.x_min) / 2;
     JSFloorPlan3D.buildingProperties.y_center =  (JSFloorPlan3D.buildingProperties.y_max -  JSFloorPlan3D.buildingProperties.y_min) / 2;
+    JSFloorPlan3D.buildingProperties.size = Math.max( JSFloorPlan3D.buildingProperties.x_center, JSFloorPlan3D.buildingProperties.y_center );
     imageCenter.x = JSFloorPlan3D.buildingProperties.x_center;
     imageCenter.y = JSFloorPlan3D.buildingProperties.y_center;
     imageCenter.z = JSFloorPlan3D.buildingProperties.z_max / 2;
     
-    JSFloorPlan3D.show3D( 35*Math.PI/180, 30*Math.PI/180 );
+    JSFloorPlan3D.show3D( 35*Math.PI/180, 30*Math.PI/180, 10, new THREE.Vector3( imageCenter.x, imageCenter.y, imageCenter.z ) );
     //}
   };
   
@@ -842,6 +843,10 @@ JSFLOORPLAN3D = function () {
       var room = new Object;
       room.name = node.getAttribute('name');
       room.zones = new Array;
+      room.center = { x: 0, y: 0 };
+      var centerCount = 0;
+      var min = {};
+      var max = {};
       
       for( var j=0; j < node.childNodes.length; j++ )
       {
@@ -857,10 +862,25 @@ JSFLOORPLAN3D = function () {
         {
           var corner = zone.childNodes[k];
           if (corner.nodeType != ELEMENT_NODE) continue;
-          thiszone.corners.push( corner.getAttribute('nodeid') );
+          var id = corner.getAttribute('nodeid')
+          thiszone.corners.push( id );
+          var x = floorNodes[ id ].x;
+          var y = floorNodes[ id ].y;
+          room.center.x += x;
+          room.center.y += y;
+          if( x < min.x || (!min.x) ) min.x = x;
+          if( y < min.y || (!min.y) ) min.y = y;
+          if( x > max.x || (!max.x) ) max.x = x;
+          if( y > max.y || (!max.y) ) max.y = y;
+          centerCount++;
         }
         room.zones.push( thiszone );
       }
+      room.center.x /= centerCount;
+      room.center.y /= centerCount;
+      var min_dist = Math.sqrt( (room.center.x - min.x)*(room.center.x - min.x) + (room.center.y - min.y)*(room.center.y - min.y) );
+      var max_dist = Math.sqrt( (room.center.x - max.x)*(room.center.x - max.x) + (room.center.y - max.y)*(room.center.y - max.y) );
+      room.size = min_dist < max_dist ? max_dist : min_dist;
       rooms[floor].push( room );
     }
   }
@@ -906,18 +926,18 @@ JSFLOORPLAN3D = function () {
     $container.append(renderer.domElement);
     
     // Init after the scene was set up
-    selectChange( 'showNodes'     );
-    selectChange( 'showWallLines' );
-    selectChange( 'showFloor'     );
+    selectChange( 'showNodes'     , 0, true );
+    selectChange( 'showWallLines' , 0, true );
+    selectChange( 'showFloor'     , 0, true );
   }
   
-  function setupCamera( azimut, elevation, height, target )
+  function setupCamera( azimut, elevation, distance, target )
   {
     var cx = Math.sin(azimut) * Math.cos(elevation);
     var cy = Math.cos(azimut) * Math.cos(elevation);
     var cz = Math.sin(elevation);
     camera.up = new THREE.Vector3( -Math.sin(azimut) * Math.sin(elevation), -Math.cos(azimut) * Math.sin(elevation), Math.cos(elevation) );
-    camera.position = new THREE.Vector3( cx*dist + JSFloorPlan3D.buildingProperties.x_center, cy*dist + JSFloorPlan3D.buildingProperties.y_center, dist * cz + height );
+    camera.position = new THREE.Vector3( cx*distance + target.x, cy*distance + target.y, distance * cz + target.z );
     camera.lookAt( target );
     pointLight.position = camera.position;
   }
@@ -926,30 +946,31 @@ JSFLOORPLAN3D = function () {
    * Show the floor plan by updating the relevant view parameters and calling
    * the render() method
    * @method show3D
-   * @param {Integer} azmiut   The direction of the camera. 0° = North, 90° = 
-   *                           East.
-   * @param {Integer} elevation The amount of tilting the view. 0° = no tilt, 
-   *                            90° = bird eyes view
+   * @param {Integer} azmiut       The direction of the camera. 0° = North, 
+   *                               90° = East.
+   * @param {Integer} elevation    The amount of tilting the view. 0° = no tilt, 
+   *                               90° = bird eyes view
+   * @param {Number}  distnce      Distance between camera and <code>target</code>
+   * @param {THREE.Vector3} target The point to look at
    */
-  JSFloorPlan3D.show3D = function( azimut, elevation )
+  JSFloorPlan3D.show3D = function( azimut, elevation, distance, target )
   {
+    showStates.currentAzimut    = azimut;
+    showStates.currentElevation = elevation;
+    showStates.currentDistance  = distance;
+    showStates.currentTarget    = target.clone(); //JSFloorPlan3D.buildingProperties.x_center;
+    
     if( noSetup ) setup3D();
     
     // set up camera
-    var heightOfGround = JSFloorPlan3D.buildingProperties.floor[ showStates.showFloor ].heightOfGround;
-    var target = new THREE.Vector3( JSFloorPlan3D.buildingProperties.x_center, JSFloorPlan3D.buildingProperties.y_center, heightOfGround  );
-    setupCamera( azimut, elevation, heightOfGround, target );
-    
-    showStates.currentAzimut    = azimut;
-    showStates.currentElevation = elevation;
-    showStates.currentHeight    = heightOfGround;
+    setupCamera( azimut, elevation, distance, target );
     
     // set up sun
     var sx = Math.sin(lightAzimut) * Math.cos(lightElevation);
     var sy = Math.cos(lightAzimut) * Math.cos(lightElevation);
     var sz = Math.sin(lightElevation);
     sunLight.target.position = target;
-    sunLight.position = new THREE.Vector3( sx * lightDistance, sy * lightDistance, sz * lightDistance + heightOfGround);
+    sunLight.position = new THREE.Vector3( sx * lightDistance, sy * lightDistance, sz * lightDistance + target.z );
     sunLight.intensity = lightStrength / 100.0;
     sunLightViewLine.geometry.vertices[0].position = sunLight.position;
     sunLightViewLine.geometry.vertices[1].position = sunLight.target.position;
@@ -1001,65 +1022,93 @@ JSFLOORPLAN3D = function () {
   /**
    * Move the displayed part of the floor plan to a new part
    * @method moveTo
-   * @param {Integer}  floor     The number of the floor to show
-   * @param {Integer}  azmiut    The direction of the camera. 0° = North, 90° = 
-   *                             East.
-   * @param {Integer}  elevation The amount of tilting the view. 0° = no tilt, 
-   *                             90° = bird eyes view
-   * @param {Function} delayedFn (optional) Function to call after animation is
-   *                             finished
+   * @param {Integer}  floor       The number of the floor to show
+   * @param {Integer}  azmiut      The direction of the camera. 0° = North,
+   *                               90° = East.
+   * @param {Integer}  elevation   The amount of tilting the view. 0° = no tilt, 
+   *                               90° = bird eyes view
+   * @param {Number}   distance    The distance of the camera
+   * @param {THREE.Vector3} target The point to look at (only <code>x</code>
+   *                               and <code>y</code> are used the <code>z</code>
+   *                               is taken from the parameter <code>floor</code>
+   * @param {Function} delayedFn   (optional) Function to call after animation is
+   *                               finished
    */
-  JSFloorPlan3D.moveTo = function( floor, azimut, elevation, delayedFn )
+  JSFloorPlan3D.moveTo = function( floor, azimut, elevation, distance, target, delayedFn )
   {
     if( noSetup ) setup3D();
     
-    var height = JSFloorPlan3D.buildingProperties.floor[ floor ].heightOfGround;
-    
     // speed of the changing
     var steps = 100;
-    var rate = { azimut: 0.0, elevation: 0.0, height: 0.0 };
+    var rate = { azimut: 0.0, elevation: 0.0, distance: 0.0, target: new THREE.Vector3 };
     
     function calcRate()
     {
-      rate = { 
-        azimut:    ( azimut    - showStates.currentAzimut    ) / steps,
-        elevation: ( elevation - showStates.currentElevation ) / steps,
-        height:    ( height    - showStates.currentHeight    ) / steps
-      };
+      rate.azimut    = ( azimut    - showStates.currentAzimut    ) / steps;
+      rate.elevation = ( elevation - showStates.currentElevation ) / steps;
+      rate.distance  = ( distance  - showStates.currentDistance  ) / steps;
+      rate.target.sub( target, showStates.currentTarget );
+      rate.target.multiplyScalar( 1.0 / steps );
+      return ( 
+        ( Math.abs( rate.azimut    * steps ) < 1e-5 ) &&
+        ( Math.abs( rate.elevation * steps ) < 1e-5 ) &&
+        ( Math.abs( rate.distance  * steps ) < 1e-4 ) &&
+        ( Math.abs( rate.target.x  * steps ) < 1e-4 ) &&
+        ( Math.abs( rate.target.y  * steps ) < 1e-4 ) &&
+        ( Math.abs( rate.target.z  * steps ) < 1e-4 )
+      );
     }
     
     function doMove()
     {
       JSFloorPlan3D.inAnimation = true;
       var done = true;
-      if( Math.abs( azimut    - showStates.currentAzimut     ) > Math.abs( rate.azimut    ) )
+      if( (showStates.currentAzimut + rate.azimut) * rate.azimut < azimut * rate.azimut )
       {
-        if( rate.azimut    == 0.0 ) calcRate();
         showStates.currentAzimut     += rate.azimut;
-        if( Math.abs( azimut    - showStates.currentAzimut     ) < 1e-5 ) // clamp if close enough
-          showStates.currentAzimut = azimut;
         done = false;
+      } else {
+        showStates.currentAzimut = azimut;
       }
-      if( Math.abs( elevation - showStates.currenteElevation ) > Math.abs( rate.elevation ) )
+      if( (showStates.currentElevation + rate.elevation) * rate.elevation < elevation * rate.elevation )
       {
-        if( rate.elevation == 0.0 ) calcRate();
         showStates.currentElevation += rate.elevation;
-        if( Math.abs( elevation - showStates.currenteElevation ) < 1e-5 ) // clamp if close enough
-          showStates.currenteElevation = elevation;
         done = false;
+      } else {
+        showStates.currenteElevation = elevation;
       }
-      if( Math.abs( height    - showStates.currentHeight     ) > Math.abs( rate.height    ) )
+      if( (showStates.currentDistance + rate.distance) * rate.distance < distance * rate.distance )
       {
-        if( rate.height    == 0.0 ) calcRate();
-        showStates.currentHeight    += rate.height;
-        if( Math.abs( height    - showStates.currentHeight     ) < 1e-4 ) // clamp if close enough
-          showStates.currentHeight = height;
+        showStates.currentDistance  += rate.distance;
         done = false;
+      } else {
+        showStates.currentDistance = distance;
+      }
+      if( (showStates.currentTarget.x + rate.target.x) * rate.target.x < target.x * rate.target.x )
+      {
+        showStates.currentTarget.x += rate.target.x;
+        done = false;
+      } else {
+        showStates.currentTarget.x = target.x;
+      }
+      if( (showStates.currentTarget.y + rate.target.y) * rate.target.y < target.y * rate.target.y )
+      {
+        showStates.currentTarget.y += rate.target.y;
+        done = false;
+      } else {
+        showStates.currentTarget.y = target.y;
+      }
+      if( (showStates.currentTarget.z + rate.target.z) * rate.target.z < target.z * rate.target.z )
+      {
+        showStates.currentTarget.z += rate.target.z;
+        done = false;
+      } else {
+        showStates.currentTarget.z = target.z;
       }
       
-      var target = new THREE.Vector3( JSFloorPlan3D.buildingProperties.x_center, JSFloorPlan3D.buildingProperties.y_center, showStates.currentHeight );
-      setupCamera( showStates.currentAzimut, showStates.currentElevation, showStates.currentHeight, target );
+      setupCamera( showStates.currentAzimut, showStates.currentElevation, showStates.currentDistance, showStates.currentTarget );
       render();
+      
       if( !done ) 
         window.requestAnimationFrame( doMove );
       else {
@@ -1069,9 +1118,8 @@ JSFLOORPLAN3D = function () {
       }
     }
     
-    if( JSFloorPlan3D.inAnimation )
-      calcRate();
-    else
+    calcRate();
+    if( !JSFloorPlan3D.inAnimation )
       doMove();
   }
   
@@ -1178,6 +1226,7 @@ JSFLOORPLAN3D = function () {
     var thisFloor = JSFloorPlan3D.buildingProperties.floor[showStates.showFloor];
     var height = thisFloor.heightOfGround + thisFloor.height;
     var intersec = JSFloorPlan3D.sceen2building( event.offsetX, event.offsetY, height );
-    JSFloorPlan3D.selectRoom( intersec, showStates.showFloor );
+    event.room = JSFloorPlan3D.selectRoom( intersec, showStates.showFloor );
+    if( event.data.callback ) event.data.callback( event );
   }
 };//());
