@@ -1076,8 +1076,16 @@ JSFLOORPLAN3D = function () {
   }
   
   /**
-   * Check if point p is in the zone zone. It's basically a point-in-polygon
-   * test using a ray casting from left infinity to the point <code>p</code>.
+   * Check if point <code>p</code> is in the zone <code>zone</code>. It's 
+   * basically a point-in-polygon test using a ray casting from left infinity to
+   * the point <code>p</code>.
+   * @method pointInZone
+   * @private
+   * @param {THREE.Vector3} p     The point to check (note: only the 
+   *                              <code>x</code> and <code>y</code> corrdinates 
+   *                              are checked
+   * @param {Number} zone         The zone to check
+   * @return {Bool}               True when point <code>p</code> is inside
    */
   function pointInZone( p, zone )
   {
@@ -1100,7 +1108,15 @@ JSFLOORPLAN3D = function () {
   }
   
   /**
-   * Figur out the room that contains the point <code>p</code> in the floor <code>floor</code>.
+   * Figur out the room that contains the point <code>p</code> in the floor.
+   * <code>floor</code>.
+   * @method selectRoom
+   * @param {THREE.Vector3} p     The point to check (note: only the 
+   *                              <code>x</code> and <code>y</code> corrdinates 
+   *                              are checked
+   * @param {Number}        floor The number of the floor to check
+   * @return {Object} If a zone / room was found a hash with the keys "room" and
+   *                  "zone" will be returned otherwise an empty Object.
    */
   JSFloorPlan3D.selectRoom = function( p, floor )
   {
@@ -1112,14 +1128,20 @@ JSFLOORPLAN3D = function () {
       {
         if( pointInZone( p, thisRoom.zones[zone] ) )
         {
-          console.log( 'in zone', thisRoom.zones[zone].name, 'in raum', thisFloor[room].name, 'in stock', floor );
+          return { room: thisFloor[room], zone: thisRoom.zones[zone] };
         }
       }
     }
+    return {};
   }
   
   /**
-   * Project screen coordinate to building space
+   * Project screen coordinate to building space.
+   * @method sceen2building
+   * @param {Number} x x position in pixel
+   * @param {Number} y y position in pixel
+   * @param {Number} h Height in building space used for mapping
+   * @return {THREE.Vector3} Point in building space
    */
   JSFloorPlan3D.sceen2building = function( x, y, h )
   {
@@ -1131,24 +1153,28 @@ JSFLOORPLAN3D = function () {
   }
   
   /**
-   * Project point in building space to screen space
+   * Project point in building space to screen space.
+   * @method building2screen
+   * @param {THREE.Vector3} p point in building space to map
+   * @return {Object} Hash with keys <code>x</code> and <code>y</code> in screen
+   *                  coordinates
    */
   JSFloorPlan3D.building2screen = function( p )
   {
     var screen = p.clone();
     projector.projectVector( screen, camera );
-    return screen;
+    return { x: (screen.x+1)/2*WIDTH, y: -(screen.y-1)/2*HEIGHT };
   }
   
   /**
    * This method can be used as an event handler for mouse events.
+   * @method translateMouseEvent
    * @param {Event}    event               The jQuery event object.
    * @param {Function} event.data.callback This callback function will be called
    *                                       after the mouse event was translated
    */
   JSFloorPlan3D.translateMouseEvent = function( event )
   {
-    console.log( JSFloorPlan3D.buildingProperties, showStates );
     var thisFloor = JSFloorPlan3D.buildingProperties.floor[showStates.showFloor];
     var height = thisFloor.heightOfGround + thisFloor.height;
     var intersec = JSFloorPlan3D.sceen2building( event.offsetX, event.offsetY, height );
