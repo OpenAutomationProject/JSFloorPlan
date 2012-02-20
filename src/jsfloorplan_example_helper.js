@@ -27,18 +27,6 @@
  * @module JS FloorPlan 3D Example
  */
 
-j = new JSFLOORPLAN3D();
-function loadFloorplan()
-{
-  $.ajax({
-    url: 'floorplan01.xml',
-    success: j.parseXMLFloorPlan,
-    dataType: 'xml',
-    async: false
-  });
-}
-
-
 function three_init()
 {
   return;
@@ -229,10 +217,6 @@ function handleMouseClickEvent( event )
   j.moveTo( showStates['showFloor'], roll, tilt, dist, target );
 }
 /////////////////////////////////////////////////////////////////////////////
-$(function() {
-  three_init();
-  $('#top_level').css('border','1px solid black').click( {callback:handleMouseClickEvent}, j.translateMouseEvent );
-});
 /////////////////////////////////////////////////////////////////////////////
 // setup script here:
 var sc = 40; // overall scaling
@@ -269,6 +253,8 @@ var t_25d_start;
 var t_25d_after_sort;
 var t_25d_end;
 
+j = new JSFloorPlan3D();
+
 function init()
 {
   $('input').change(function(e){
@@ -292,7 +278,8 @@ function init()
     showStates[ this.name ] = this.value; // init
   });
   
-  loadFloorplan();
+  //loadFloorplan();
+  j.loadFloorPlan('floorplan_demo.xml'); 
   target.x = j.buildingProperties.x_center;
   target.y = j.buildingProperties.y_center;
   createSlider();
@@ -637,3 +624,8 @@ function getSunPosition( date, latitude, longitude )
     altitude: Math.atan2( sin_a, azimuth ) * 180/Math.PI
   };
 } 
+
+$(function() {
+  three_init();
+  $('#top_level').css('border','1px solid black').click( {callback:handleMouseClickEvent,JSFloorPlan3D:j}, j.translateMouseEvent );
+});
