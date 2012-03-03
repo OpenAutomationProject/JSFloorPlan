@@ -142,10 +142,10 @@
  */
 (function( window, undefined ){
   // the constructor
-  var JSFloorPlan3D = function( floorPlan ){  
+  var JSFloorPlan3D = function( container, floorPlan ){  
     if (!(this instanceof JSFloorPlan3D)) 
     {
-      return new JSFloorPlan3D( floorPlan );
+      return new JSFloorPlan3D( container, floorPlan );
     }
     
     if (typeof floorPlan === "string") 
@@ -159,9 +159,28 @@
     // private variables of this object instance will follow
   
   var that = this;
+  var thatObject = {that: this};
+  this.thisThatObject = {that: this};
+  this.thisThat = this;
   
   ////////////////////////////////////////////////////////////////////////////
   // Definition of the private variables
+  
+  // create the materials - sphere for the nodes, cube for the walls and line for the lines
+  var sphereMaterial = new THREE.MeshLambertMaterial( { color: 0xCC0000 });
+  //var cubeMaterial   = new THREE.MeshLambertMaterial( { color: 0x0000CC });
+  var cubeMaterial   = new THREE.MeshBasicMaterial({ map: THREE.ImageUtils.loadTexture( 'media/demo_texture_512x512.png' ) });
+  //var cubeMaterial   = new THREE.MeshPhongMaterial( { color: 0xff0000, specular: 0xffffff, ambient: 0xaa0000 } );
+  var lineMaterial   = new THREE.LineBasicMaterial( { color: 0x0099ff, linewidth: 2 } );
+  
+  var scene, camera, renderer, pointLight, sunLight, ambientLight, sunLightViewLine;
+  // set up the sphere vars
+
+  //var lightAzimut, lightElevation, lightStrength, lightDistanceŷ;
+  this.lightAzimut = {foo:'bar'}; 
+  this.lightElevation; 
+  this.lightStrength;
+  this.lightDistanceŷ;
   
   var floor;
   
@@ -367,7 +386,7 @@
       // iterate over the content of this floor
       for( var j=0; j < floor.childNodes.length; j++ )
       {
-        floorNode = floor.childNodes[j];
+        var floorNode = floor.childNodes[j];
         if (floorNode.nodeType != ELEMENT_NODE) continue;
         
         switch( floorNode.tagName )
@@ -451,7 +470,7 @@
           if(  floorWalls[wjj].endOffset   && vectors[jj].id < 0 )
             djj += -floorWalls[wjj].endOffset;
           
-          vertex = new Object;
+          var vertex = new Object;
           vertex.x = vectors[j].x*djj + vectors[jj].x*dj;
           vertex.y = vectors[j].y*djj + vectors[jj].y*dj;
           var l = vectors[j].x*vectors[jj].y - vectors[j].y*vectors[jj].x;
@@ -592,8 +611,8 @@
           p2tF.push(new THREE.Face3(val.GetPoint(0).id, val.GetPoint(1).id, val.GetPoint(2).id));
         });
         
-        Tvertices = swctx.points_;
-        Tfaces = p2tF;
+        var Tvertices = swctx.points_;
+        var Tfaces = p2tF;
         var wall1vertices = [];
         var wall2vertices = [];
         var sId, eId;
@@ -732,7 +751,7 @@
   {
     for( var i=0; i < nodes.childNodes.length; i++ )
     {
-      node = nodes.childNodes[i];
+      var node = nodes.childNodes[i];
       if (node.nodeType != ELEMENT_NODE) continue;
       
       var id = node.getAttribute('id');
@@ -774,7 +793,7 @@
   {
     for( var i=0; i < nodes.childNodes.length; i++ )
     {
-      node = nodes.childNodes[i];
+      var node = nodes.childNodes[i];
       if (node.nodeType != ELEMENT_NODE) continue;
       
       /**
@@ -932,10 +951,77 @@
    * @method setup3D
    * @private
    */
-  function setup3D( thisObject3D )
-  {
+  function setup3D( currentThis, thisObject3D )
+  { 
     if( noFloorplan ) return;
     noSetup = false;
+    
+    ///////////////////////////////////////////////////////////////////////////
+    // set the scene size
+    var WIDTH = 800,
+        HEIGHT = 400;
+    
+    // set some camera attributes
+    var VIEW_ANGLE = 45,
+        ASPECT = WIDTH / HEIGHT,
+        NEAR = 0.1,
+        FAR = 10000;
+    
+    
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    camera = new THREE.PerspectiveCamera(
+                      VIEW_ANGLE,
+                      ASPECT,
+                      NEAR,
+                      FAR );
+    scene = new THREE.Scene();
+    scene.add( camera );
+    // the camera starts at 0,0,0 so pull it back
+    camera.position.z = 300;
+
+    // start the renderer
+    renderer.setSize(WIDTH, HEIGHT);
+    
+    // enable shadows
+    var SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
+    renderer.shadowCameraNear = 0.1;
+    renderer.shadowCameraFar = 100;
+    renderer.shadowCameraFov = 45;
+    
+    renderer.shadowMapBias = 0.0039;
+    renderer.shadowMapDarkness = 0.5;
+    renderer.shadowMapWidth = SHADOW_MAP_WIDTH;
+    renderer.shadowMapHeight = SHADOW_MAP_HEIGHT;
+    renderer.shadowMapEnabled = true;
+    //renderer.shadowMapSoft = true;
+    var projector = new THREE.Projector();
+    
+    // create a point light
+    pointLight = new THREE.PointLight( 0xFFFFFF );
+    
+    ambientLight = new THREE.AmbientLight( 0xFFFFFF );
+    // set its position
+    pointLight.position.x = 10;
+    pointLight.position.y = 50;
+    pointLight.position.z = 130;
+    
+    // add to the scene
+    //scene.add(pointLight);
+    
+    currentThis.lightAzimut    = 3.9;
+    currentThis.lightElevation = 0.25;
+    currentThis.lightStrength  = 80;
+    currentThis.lightDistance  = 50;
+    sunLight =  new THREE.SpotLight( 0xffffff );
+    sunLight.position.set( 0, 1500, 1000 );
+    sunLight.target.position.set( 0, 0, 0 );
+    sunLight.castShadow = true;
+    var sunLightView = new THREE.Geometry(); 
+    sunLightView.vertices.push( new THREE.Vertex( sunLight.position ) ); 
+    sunLightView.vertices.push( new THREE.Vertex( sunLight.target.position ) ); 
+    sunLightViewLine = new THREE.Line( sunLightView, lineMaterial );
+    scene.add( sunLightViewLine );
+    ///////////////////////////////////////////////////////////////////////////
     
     scene.add( thisObject3D );
     
@@ -946,14 +1032,9 @@
     //scene.add(pointLight);
     scene.add(ambientLight);
     //scene.add( camera );
-    var $container = $('#top_level');
+    var $container = $(container);
     // attach the render-supplied DOM element
     $container.append(renderer.domElement);
-    
-    // Init after the scene was set up
-    selectChange( 'showNodes'     , 0, true );
-    selectChange( 'showWallLines' , 0, true );
-    selectChange( 'showFloor'     , 0, true );
   }
   
   function setupCamera( azimut, elevation, distance, target )
@@ -965,6 +1046,16 @@
     camera.position = new THREE.Vector3( cx*distance + target.x, cy*distance + target.y, distance * cz + target.z );
     camera.lookAt( target );
     pointLight.position = camera.position;
+  }
+  
+  JSFloorPlan3D.prototype.render = function()
+  {
+    renderer.render( scene, camera );
+  }
+  
+  JSFloorPlan3D.prototype.showWireframe = function( doShowWireframe )
+  {
+    cubeMaterial.wireframe = doShowWireframe;
   }
   
   /**
@@ -985,18 +1076,18 @@
     showStates.currentDistance  = distance;
     showStates.currentTarget    = target.clone(); //JSFloorPlan3D.buildingProperties.x_center;
     
-    if( noSetup ) setup3D( this.buildingProperties.Object3D );
+    if( noSetup ) setup3D( this, this.buildingProperties.Object3D );
     
     // set up camera
     setupCamera( azimut, elevation, distance, target );
     
     // set up sun
-    var sx = Math.sin(lightAzimut) * Math.cos(lightElevation);
-    var sy = Math.cos(lightAzimut) * Math.cos(lightElevation);
-    var sz = Math.sin(lightElevation);
+    var sx = Math.sin(this.lightAzimut) * Math.cos(this.lightElevation);
+    var sy = Math.cos(this.lightAzimut) * Math.cos(this.lightElevation);
+    var sz = Math.sin(this.lightElevation);
     sunLight.target.position = target;
-    sunLight.position = new THREE.Vector3( sx * lightDistance, sy * lightDistance, sz * lightDistance + target.z );
-    sunLight.intensity = lightStrength / 100.0;
+    sunLight.position = new THREE.Vector3( sx * this.lightDistance, sy * this.lightDistance, sz * this.lightDistance + target.z );
+    sunLight.intensity = this.lightStrength / 100.0;
     sunLightViewLine.geometry.vertices[0].position = sunLight.position;
     sunLightViewLine.geometry.vertices[1].position = sunLight.target.position;
     sunLightViewLine.geometry.__dirtyVertices = true;
@@ -1041,7 +1132,8 @@
         break;
     };
     
-    render();
+    //this.render();
+    renderer.render( scene, camera );
   }
   
   /**
@@ -1132,7 +1224,7 @@
       }
       
       setupCamera( showStates.currentAzimut, showStates.currentElevation, showStates.currentDistance, showStates.currentTarget );
-      render();
+      renderer.render( scene, camera );
       
       if( !done ) 
         window.requestAnimationFrame( doMove );
