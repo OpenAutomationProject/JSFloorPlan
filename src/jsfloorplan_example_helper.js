@@ -27,146 +27,6 @@
  * @module JS FloorPlan 3D Example
  */
 
-function three_init()
-{
-  return;
-  // get the DOM element to attach to
-  // - assume we've got jQuery to hand
-  //var $container = $('#container');
-  var $container = $('#top_level');
-  // attach the render-supplied DOM element
-  $container.append(renderer.domElement);
-  // draw!
-  //scene.add( camera );
-  //renderer.render(scene, camera); 
-  //render();
-  animate();
-}
-// set the scene size
-var WIDTH = 800,
-    HEIGHT = 400;
-
-// set some camera attributes
-var VIEW_ANGLE = 45,
-    ASPECT = WIDTH / HEIGHT,
-    NEAR = 0.1,
-    FAR = 10000;
-
-
-// create a WebGL renderer, camera
-// and a scene
-var renderer = new THREE.WebGLRenderer({antialias: true});
-var camera = new THREE.PerspectiveCamera(
-                   VIEW_ANGLE,
-                   ASPECT,
-                   NEAR,
-                   FAR );
-/*
-var controls = new THREE.TrackballControls( camera );
-//controls.rotateSpeed = 1.0;
-//controls.zoomSpeed = 1.2;
-//controls.panSpeed = 0.8;
-
-controls.noZoom = false;
-controls.noPan = false;
-
-controls.staticMoving = true;
-controls.dynamicDampingFactor = 0.3;
-
-controls.keys = [ 65, 83, 68 ];
-*/
-var scene = new THREE.Scene();
-scene.add( camera );
-// the camera starts at 0,0,0 so pull it back
-camera.position.z = 300;
-
-// start the renderer
-renderer.setSize(WIDTH, HEIGHT);
-
-// enable shadows
-var SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
-renderer.shadowCameraNear = 0.1;
-renderer.shadowCameraFar = 100;
-renderer.shadowCameraFov = 45;
-
-renderer.shadowMapBias = 0.0039;
-renderer.shadowMapDarkness = 0.5;
-renderer.shadowMapWidth = SHADOW_MAP_WIDTH;
-renderer.shadowMapHeight = SHADOW_MAP_HEIGHT;
-renderer.shadowMapEnabled = true;
-//renderer.shadowMapSoft = true;
-var projector = new THREE.Projector();
-
-// set up the sphere vars
-var radius = 50, segments = 16, rings = 16;
-
-// create the sphere's material
-var sphereMaterial = new THREE.MeshLambertMaterial(
-{
-    color: 0xCC0000
-});
-// create a new mesh with sphere geometry -
-// we will cover the sphereMaterial next!
-var sphere = new THREE.Mesh(
-   new THREE.SphereGeometry(radius,
-   segments,
-   rings),
-
-   sphereMaterial);
-
-// add the sphere to the scene
-//scene.add(sphere);
-
-var cubeMaterial = new THREE.MeshLambertMaterial(
-{
-    color: 0x0000CC
-});
-var cube = new THREE.Mesh(
-  new THREE.CubeGeometry( 
-    10, 20, 30, 
-    2, 2),
-    cubeMaterial
-);
-cube.position = new THREE.Vector3(50,50,50);
-//scene.add( cube );
-
-cubeMaterial = new THREE.MeshBasicMaterial({ map: THREE.ImageUtils.loadTexture( 'media/demo_texture_512x512.png' ) });
-//cubeMaterial = new THREE.MeshPhongMaterial( { color: 0xff0000, specular: 0xffffff, ambient: 0xaa0000 } );
-
-var lineMaterial = new THREE.LineBasicMaterial( { color: 0x0099ff, linewidth: 2 } );
- 
-// create a point light
-var pointLight = new THREE.PointLight( 0xFFFFFF );
-
-var ambientLight = new THREE.AmbientLight( 0xFFFFFF );
-// set its position
-pointLight.position.x = 10;
-pointLight.position.y = 50;
-pointLight.position.z = 130;
-
-// add to the scene
-//scene.add(pointLight);
-
-var lightAzimut    = 3.9;
-var lightElevation = 0.25;
-var lightStrength  = 80;
-var lightDistance  = 50;
-//var sunLight = new THREE.PointLight( 0xFFFFFF );
-//var sunLight = new THREE.DirectionalLight( 0xFFFFFF );
-var sunLight =  new THREE.SpotLight( 0xffffff );
-sunLight.position.set( 0, 1500, 1000 );
-sunLight.target.position.set( 0, 0, 0 );
-sunLight.castShadow = true;
-var sunLightView = new THREE.Geometry(); 
-sunLightView.vertices.push( new THREE.Vertex( sunLight.position ) ); 
-sunLightView.vertices.push( new THREE.Vertex( sunLight.target.position ) ); 
-var sunLightViewLine = new THREE.Line( sunLightView, lineMaterial );
-scene.add( sunLightViewLine );
-//var dlight = new THREE.DirectionalLight( 0xffffff, 0.1 );
-//                                dlight.position.set( 0.5, -1, 0 ).normalize();
-//                                scene.add( dlight );
-
-
 /**
  * Provides requestAnimationFrame in a cross browser way.
  * http://paulirish.com/2011/requestanimationframe-for-smart-animating/
@@ -192,13 +52,6 @@ function animate() {
   //stats.update();
 }
 
-function render() {
- //controls.update();
-  renderer.render( scene, camera );
-}
-
-//}
-
 function handleMouseClickEvent( event )
 {
   if( event.room.room ) 
@@ -221,20 +74,6 @@ function handleMouseClickEvent( event )
 // setup script here:
 var sc = 40; // overall scaling
 var showStates = {};
-/*
-var showWallSides    = true;
-var showWallTop      = true;
-var showSideLines    = true;
-var showTopLines     = true;
-var showBackside     = true;
-var showHoles        = true;
-var showZones        = true;
-var showVisibleZones = false;
-var showFloor        = 1;
-var wallMouseOver    = true;
-var fillOpacity      = 0.5;
-var fillColor        = 'black';
-*/
 var redrawInterval = 50; // in milliseconds; = 20 fps
 
 var roll = 35*Math.PI/180;
@@ -253,7 +92,7 @@ var t_25d_start;
 var t_25d_after_sort;
 var t_25d_end;
 
-j = new JSFloorPlan3D();
+j = new JSFloorPlan3D('#top_level');
 
 function init()
 {
@@ -278,12 +117,16 @@ function init()
     showStates[ this.name ] = this.value; // init
   });
   
-  //loadFloorplan();
   j.loadFloorPlan('floorplan_demo.xml'); 
   target.x = j.buildingProperties.x_center;
   target.y = j.buildingProperties.y_center;
   createSlider();
-  render();
+  j.render();
+  
+  // Init after the scene was set up
+  selectChange( 'showNodes'     , 0, true );
+  selectChange( 'showWallLines' , 0, true );
+  selectChange( 'showFloor'     , 0, true );
 }
 
 function selectChange( name, old, onlyInit )
@@ -340,7 +183,7 @@ function selectChange( name, old, onlyInit )
       break;
       
     case 'showWireframe':
-      cubeMaterial.wireframe = showStates['showWireframe'];
+      j.showWireframe( showStates['showWireframe'] );
       break;
   }
   return true;
@@ -420,70 +263,6 @@ function showStats( text )
    document.getElementById('status').firstChild.data = text;
 }
 
-/*
-function set_color( event )
-{
-  if( 'blue' != fillColor )
-    event.setAttribute( 'fill', 'blue' );
-  else
-    event.setAttribute( 'fill', 'red' );
-}
-
-function unset_color( event ) 
-{
-  event.setAttribute( 'fill', fillColor );
-} 
-*/
-/*
-function check( what, redraw )
-{
-  eval( what +' = document.forms[0].elements[what].checked' );
-
-  switch( what )
-  {
-    case 'wallMouseOver':
-      if( wallMouseOver )
-      {
-        wrapper.setAttribute( "onmouseover", 'set_color(this);' );
-        wrapper.setAttribute( "onmouseout", 'unset_color(this);' );
-      } else {
-        wrapper.setAttribute( "onmouseover", '' );
-        wrapper.setAttribute( "onmouseout", '' );
-      }
-      break;
-  }
-
-  if( redraw )
-  {
-    j.show3D( roll, tilt, dist, plan );
-  }
-}
-*/
-
-/*
-function selectValue( what, redraw )
-{
-  var val = document.forms[0].elements[what].options[ document.forms[0].elements[what].selectedIndex ].value;
-  eval( what + ' = val' );
-
-  switch( what )
-  {
-    case 'fillOpacity':
-      wrapper.setAttribute( "fill-opacity", fillOpacity );
-      break;
-
-    case 'fillColor':
-      wrapper.setAttribute( "fill", fillColor );
-      break;
-  }
-
-  if( redraw )
-  {
-    j.show3D( roll, tilt, dist, plan );
-  }
-}
-*/
-
 // Create the little graphics for the roll and the tilt angle
 // as well as the buttons to manipulate them
 function createSlider()
@@ -504,15 +283,15 @@ function updateSlider()
   globalInUpdateSlider = true;
   var rollAngle = (roll * 180/Math.PI);
   var tiltAngle = (tilt * 180/Math.PI);
-  var lightDirectionAngle = (lightAzimut    * 180/Math.PI);
-  var lightHeightAngle    = (lightElevation * 180/Math.PI);
+  var lightDirectionAngle = (j.lightAzimut    * 180/Math.PI);
+  var lightHeightAngle    = (j.lightElevation * 180/Math.PI);
   $( "#rollSlider" ).slider( "option", "value", rollAngle );
   $( "#tiltSlider" ).slider( "option", "value", tiltAngle );
   $( "#distSlider" ).slider( "option", "value", dist      );
   $( "#lightDirectionSlider" ).slider( "option", "value", lightDirectionAngle );
   $( "#lightHeightSlider"    ).slider( "option", "value", lightHeightAngle    );
-  $( "#lightStrengthSlider"  ).slider( "option", "value", lightStrength       );
-  $( "#lightDistanceSlider"  ).slider( "option", "value", lightDistance       );
+  $( "#lightStrengthSlider"  ).slider( "option", "value", j.lightStrength       );
+  $( "#lightDistanceSlider"  ).slider( "option", "value", j.lightDistance       );
   globalInUpdateSlider = false;
 }
 
@@ -540,28 +319,28 @@ function distChange( event, ui )
 function lightDirectionChange( event, ui ) 
 { 
   if( globalInUpdateSlider ) return true;
-  lightAzimut = ui.value * Math.PI / 180;
+  j.lightAzimut = ui.value * Math.PI / 180;
   j.show3D( roll, tilt, dist, target );
 }
 
 function lightHeightChange( event, ui ) 
 { 
   if( globalInUpdateSlider ) return true;
-  lightElevation = ui.value * Math.PI / 180;
+  j.lightElevation = ui.value * Math.PI / 180;
   j.show3D( roll, tilt, dist, target );
 }
 
 function lightStrengthChange( event, ui ) 
 {
   if( globalInUpdateSlider ) return true;
-  lightStrength = ui.value;
+  j.lightStrength = ui.value;
   j.show3D( roll, tilt, dist, target );
 }
 
 function lightDistanceChange( event, ui ) 
 {
   if( globalInUpdateSlider ) return true;
-  lightDistance = ui.value;
+  j.lightDistance = ui.value;
   j.show3D( roll, tilt, dist, target );
 }
 
@@ -626,6 +405,5 @@ function getSunPosition( date, latitude, longitude )
 } 
 
 $(function() {
-  three_init();
   $('#top_level').css('border','1px solid black').click( {callback:handleMouseClickEvent,JSFloorPlan3D:j}, j.translateMouseEvent );
 });
