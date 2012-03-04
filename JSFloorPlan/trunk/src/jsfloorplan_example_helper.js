@@ -27,53 +27,15 @@
  * @module JS FloorPlan 3D Example
  */
 
-/**
- * Provides requestAnimationFrame in a cross browser way.
- * http://paulirish.com/2011/requestanimationframe-for-smart-animating/
- * @class requestAnimationFrame
- */
-
-if ( !window.requestAnimationFrame ) {
-  window.requestAnimationFrame = ( function() {
-    return window.webkitRequestAnimationFrame ||
-    window.mozRequestAnimationFrame ||
-    window.oRequestAnimationFrame ||
-    window.msRequestAnimationFrame ||
-    function( /* function FrameRequestCallback */ callback, /* DOMElement Element */ element ) {
-      window.setTimeout( callback, 1000 / 60 );
-  };
-} )();
-
-}
-function animate() {
-  requestAnimationFrame( animate );
-  //render();
-  j.show3D( roll, tilt, dist, target );
-  //stats.update();
-}
-
 function handleMouseClickEvent( event )
 {
-  if( event.room.room ) 
-  {
-    var room = event.room.room;
-    var zone = event.room.zone;
-    target.x = room.center.x;
-    target.y = room.center.y;
-    dist = room.size / Math.tan( VIEW_ANGLE * Math.PI/180 / 2 );
-  } else {
-    target.x = j.buildingProperties.x_center;
-    target.y = j.buildingProperties.y_center;
-    dist = j.buildingProperties.size / Math.tan( VIEW_ANGLE * Math.PI/180 / 2 );
-  }
+  target = j.moveToRoom( j.getState('showFloor'), event.room.room );
   updateSlider();
-  j.moveTo( showStates['showFloor'], roll, tilt, dist, target );
 }
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 // setup script here:
 var sc = 40; // overall scaling
-var showStates = {};
 var redrawInterval = 50; // in milliseconds; = 20 fps
 
 var roll = 35*Math.PI/180;
@@ -97,36 +59,37 @@ j = new JSFloorPlan3D('#top_level');
 function init()
 {
   $('input').change(function(e){
-    var old = showStates[ e.target.name ];
-    showStates[ e.target.name ] = e.target.checked;
+    var old = j.getState( e.target.name );
+    j.setState( e.target.name, e.target.checked );
     if( selectChange( e.target.name, old ) )
     {
       j.show3D( roll, tilt, dist, target );
     }
   }).each(function(){
-    showStates[ this.name ] = this.checked; // init
+    j.setState( this.name, this.checked ); // init
   });
   $('select').change(function(e){
-    var old = showStates[ e.target.name ];
-    showStates[ e.target.name ] = e.target.value;
+    var old = j.getState( e.target.name );
+    j.setState( e.target.name, e.target.value );
     if( selectChange( e.target.name, old ) )
     {
       j.show3D( roll, tilt, dist, target );
     }
   }).each(function(){
-    showStates[ this.name ] = this.value; // init
+    j.setState( this.name, this.value ); // init
   });
   
   j.loadFloorPlan('floorplan_demo.xml'); 
   target.x = j.buildingProperties.x_center;
   target.y = j.buildingProperties.y_center;
   createSlider();
-  j.render();
   
   // Init after the scene was set up
   selectChange( 'showNodes'     , 0, true );
   selectChange( 'showWallLines' , 0, true );
   selectChange( 'showFloor'     , 0, true );
+  
+  j.render();
 }
 
 function selectChange( name, old, onlyInit )
@@ -136,7 +99,7 @@ function selectChange( name, old, onlyInit )
     case 'showNodes':
       $( j.buildingProperties.floor ).each( function(){
         THREE.SceneUtils.traverseHierarchy( this.nodeGroup, function( object ) {
-          object.visible = showStates['showNodes']; 
+          object.visible = j.getState( 'showNodes' ); 
         });
       });
       break;
@@ -144,46 +107,35 @@ function selectChange( name, old, onlyInit )
     case 'showWallLines':
       $( j.buildingProperties.floor ).each( function(){
         THREE.SceneUtils.traverseHierarchy( this.lineGroup, function( object ) {
-          object.visible = showStates['showWallLines']; 
+          object.visible = j.getState( 'showWallLines' ); 
         });
       });
       break;
       
     case 'showFloor':
-      //showStates['showFloor'] = Number( showStates['showFloor'] );
       if( onlyInit )
       {
         $( j.buildingProperties.floor ).each( function( number ){
-          THREE.SceneUtils.traverseHierarchy( this.wallGroup, function( object ) {
-            object.visible = ( showStates['showFloor'] == number ); 
-          });
+          j.hideFloor( number, j.getState( 'showFloor' ) == number ); 
         });
-        target.z = j.buildingProperties.floor[ showStates['showFloor'] ].heightOfGround + 
-                   j.buildingProperties.floor[ showStates['showFloor'] ].height / 2;
+        target.z = j.buildingProperties.floor[ j.getState( 'showFloor' ) ].heightOfGround + 
+                   j.buildingProperties.floor[ j.getState( 'showFloor' ) ].height / 2;
           return false;
       }
-      var min = old < showStates['showFloor'] ? old : showStates['showFloor'];
-      var max = old > showStates['showFloor'] ? old : showStates['showFloor'];
+      var min = old < j.getState( 'showFloor' ) ? old : j.getState( 'showFloor' );
+      var max = old > j.getState( 'showFloor' ) ? old : j.getState( 'showFloor' );
       $( j.buildingProperties.floor ).each( function( number ){
-        THREE.SceneUtils.traverseHierarchy( this.wallGroup, function( object ) {
-          object.visible = ( (min <= number) && (number <= max) ); 
-        });
+        j.hideFloor( number, (min <= number) && (number <= max) ); 
       });
-      target.z = j.buildingProperties.floor[ showStates['showFloor'] ].heightOfGround + 
-                 j.buildingProperties.floor[ showStates['showFloor'] ].height / 2;
-      j.moveTo( showStates['showFloor'], roll, tilt, dist, target, function(){
+      target.z = j.buildingProperties.floor[ j.getState( 'showFloor' ) ].heightOfGround + 
+                 j.buildingProperties.floor[ j.getState( 'showFloor' ) ].height / 2;
+      j.moveTo( j.getState( 'showFloor' ), roll, tilt, dist, target, function(){
         $( j.buildingProperties.floor ).each( function( number ){
-          THREE.SceneUtils.traverseHierarchy( this.wallGroup, function( object ) {
-            object.visible = ( showStates['showFloor'] == number ); 
-          });
+          j.hideFloor( number, j.getState( 'showFloor' ) == number );
         });
         j.show3D( roll, tilt, dist, target );
       });
       return false;
-      break;
-      
-    case 'showWireframe':
-      j.showWireframe( showStates['showWireframe'] );
       break;
   }
   return true;
@@ -283,15 +235,15 @@ function updateSlider()
   globalInUpdateSlider = true;
   var rollAngle = (roll * 180/Math.PI);
   var tiltAngle = (tilt * 180/Math.PI);
-  var lightDirectionAngle = (j.lightAzimut    * 180/Math.PI);
-  var lightHeightAngle    = (j.lightElevation * 180/Math.PI);
+  var lightDirectionAngle = (j.getState('lightAzimut')    * 180/Math.PI);
+  var lightHeightAngle    = (j.getState('lightElevation') * 180/Math.PI);
   $( "#rollSlider" ).slider( "option", "value", rollAngle );
   $( "#tiltSlider" ).slider( "option", "value", tiltAngle );
   $( "#distSlider" ).slider( "option", "value", dist      );
   $( "#lightDirectionSlider" ).slider( "option", "value", lightDirectionAngle );
   $( "#lightHeightSlider"    ).slider( "option", "value", lightHeightAngle    );
-  $( "#lightStrengthSlider"  ).slider( "option", "value", j.lightStrength       );
-  $( "#lightDistanceSlider"  ).slider( "option", "value", j.lightDistance       );
+  $( "#lightStrengthSlider"  ).slider( "option", "value", j.getState('lightStrength') );
+  $( "#lightDistanceSlider"  ).slider( "option", "value", j.getState('lightDistance') );
   globalInUpdateSlider = false;
 }
 
@@ -319,15 +271,13 @@ function distChange( event, ui )
 function lightDirectionChange( event, ui ) 
 { 
   if( globalInUpdateSlider ) return true;
-  j.lightAzimut = ui.value * Math.PI / 180;
-  j.show3D( roll, tilt, dist, target );
+  j.setState( 'lightAzimut', ui.value * Math.PI / 180, true );
 }
 
 function lightHeightChange( event, ui ) 
 { 
   if( globalInUpdateSlider ) return true;
-  j.lightElevation = ui.value * Math.PI / 180;
-  j.show3D( roll, tilt, dist, target );
+  j.setState( 'lightElevation', ui.value * Math.PI / 180, true );
 }
 
 function lightStrengthChange( event, ui ) 
