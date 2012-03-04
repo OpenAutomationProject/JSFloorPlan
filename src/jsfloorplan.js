@@ -165,10 +165,12 @@
     
     var self = this;
     
+    /*
     if (typeof floorPlan === "string") 
     {
       this.loadFloorPlan( floorPlan );
     }
+    */
     
     // public variables of this object instance
     this.buildingProperties = { floor: [], Object3D: new THREE.Object3D() };
@@ -205,7 +207,7 @@
     lightStrength: 80,
     lightDistance: 50,
     fillOpacity: 1,                // solid
-    fillColor: new THREE.Color(0x000000), // black
+    fillColor: new THREE.Color(0xffffff), // white
     showNodes: false,              // only for debug purposes
     showWallLines: false,          // only for debug purposes
     showWireframe: false,          // 
@@ -1135,8 +1137,8 @@
     var sx = Math.sin(showStates.lightAzimut) * Math.cos(showStates.lightElevation);
     var sy = Math.cos(showStates.lightAzimut) * Math.cos(showStates.lightElevation);
     var sz = Math.sin(showStates.lightElevation);
-    sunLight.target.position = target;
-    sunLight.position = new THREE.Vector3( sx * showStates.lightDistance, sy * showStates.lightDistance, sz * showStates.lightDistance + target.z );
+    sunLight.target.position = showStates.currentTarget;
+    sunLight.position = new THREE.Vector3( sx * showStates.lightDistance, sy * showStates.lightDistance, sz * showStates.lightDistance + showStates.currentTarget.z );
     sunLight.intensity = showStates.lightStrength / 100.0;
     sunLightViewLine.geometry.vertices[0].position = sunLight.position;
     sunLightViewLine.geometry.vertices[1].position = sunLight.target.position;
@@ -1397,6 +1399,10 @@
     if( event.data.callback ) event.data.callback( event );
   }
   
+    if (typeof floorPlan === "string") 
+    {
+      this.loadFloorPlan( floorPlan );
+    }
   };
   // library local variables
   
