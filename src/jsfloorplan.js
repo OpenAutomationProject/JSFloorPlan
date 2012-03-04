@@ -141,12 +141,29 @@
  * @constructor FOO
  */
 (function( window, undefined ){
-  // the constructor
-  var JSFloorPlan3D = function( container, floorPlan ){  
+  ////////////////////////////////////////////////////////////////////////////
+  // private static variables and methods:
+  
+  /**
+  * Constant representing the ID of an ELEMENT_NODE
+  * @property ELEMENT_NODE
+  * @private
+  * @static
+  * @final
+  * @type Enum
+  */
+  var ELEMENT_NODE = 1;
+  
+  ////////////////////////////////////////////////////////////////////////////
+  // the library
+  var JSFloorPlan3D = function( container, floorPlan ){
+    // check and fix if the user forgot the "new" keyword
     if (!(this instanceof JSFloorPlan3D)) 
     {
       return new JSFloorPlan3D( container, floorPlan );
     }
+    
+    var self = this;
     
     if (typeof floorPlan === "string") 
     {
@@ -158,14 +175,13 @@
     
     // private variables of this object instance will follow
   
-  var that = this;
-  var thatObject = {that: this};
-  this.thisThatObject = {that: this};
-  this.thisThat = this;
-  
   ////////////////////////////////////////////////////////////////////////////
   // Definition of the private variables
   
+  var WIDTH = 800,
+      HEIGHT = 400;
+  var VIEW_ANGLE = 45;
+  var projector = new THREE.Projector();
   // create the materials - sphere for the nodes, cube for the walls and line for the lines
   var sphereMaterial = new THREE.MeshLambertMaterial( { color: 0xCC0000 });
   //var cubeMaterial   = new THREE.MeshLambertMaterial( { color: 0x0000CC });
@@ -175,12 +191,27 @@
   
   var scene, camera, renderer, pointLight, sunLight, ambientLight, sunLightViewLine;
   // set up the sphere vars
-
-  //var lightAzimut, lightElevation, lightStrength, lightDistanceŷ;
-  this.lightAzimut = {foo:'bar'}; 
-  this.lightElevation; 
-  this.lightStrength;
-  this.lightDistanceŷ;
+  
+  /**
+   * Set states that define how the floor plan is drawn
+   */
+  var showStates = {
+    currentAzimut: 1,              // North up
+    currentElevation: Math.PI/2,   // top view
+    currentDistance: 10,
+    // currentTarget: new THREE.Vector3, // will be defined later
+    lightAzimut: 3.9,
+    lightElevation: 0.25,
+    lightStrength: 80,
+    lightDistance: 50,
+    fillOpacity: 1,                // solid
+    fillColor: new THREE.Color(0x000000), // black
+    showNodes: false,              // only for debug purposes
+    showWallLines: false,          // only for debug purposes
+    showWireframe: false,          // 
+    showLightView: false,          // only for debug purposes
+    showFloor: undefined
+  };
   
   var floor;
   
@@ -230,15 +261,6 @@
    */
   JSFloorPlan3D.inAnimation = false;
   
-  /**
-  * Constant representing the ID of an ELEMENT_NODE
-  * @property ELEMENT_NODE
-  * @private
-  * @static
-  * @final
-  * @type Enum
-  */
-  var ELEMENT_NODE = 1;
   
   ////////////////////////////////////////////////////////////////////////////
   // Definition of the private methods
@@ -317,27 +339,11 @@
   }
   
   /**
-   * Get the URL url and set up this object by its content
-   * @param {String} url
-   */
-  JSFloorPlan3D.prototype.loadFloorPlan = function( url )
-  {
-    var outerThis = this;
-    $.ajax({
-      url: url,
-      context: outerThis,
-      success: function( xmlDoc ){ outerThis.parseXMLFloorPlan( xmlDoc ); },
-      dataType: 'xml',
-      async: false
-    });
-  }
-  
-  /**
    * Parse and create internal structure for the floor plan.
    * @method parseXMLFloorPlan
    * @param {XMLDom} xmlDoc
    */
-  JSFloorPlan3D.prototype.parseXMLFloorPlan = function( xmlDoc )
+  var parseXMLFloorPlan = function( xmlDoc )
   {
     noFloorplan = false;
     
@@ -363,7 +369,7 @@
                   
       if( floor.tagName == 'textures' )
       {
-        this.parseTextures( floor );
+        parseTextures( floor );
         continue;
       }  
       
@@ -372,14 +378,14 @@
                       "Expected: 'floor', found '" + floor.tagName + "'" );
       
       floorCount++;
-      this.buildingProperties.floor[floorCount] = {};
+      self.buildingProperties.floor[floorCount] = {};
       
       var floorName = floor.getAttribute('name');
-      this.buildingProperties.floor[floorCount].name = floorName;
+      self.buildingProperties.floor[floorCount].name = floorName;
       
       var floorheight = Number( floor.getAttribute('height') );
-      this.buildingProperties.floor[floorCount].height = floorheight;
-      this.buildingProperties.floor[floorCount].heightOfGround = heightOfGround;
+      self.buildingProperties.floor[floorCount].height = floorheight;
+      self.buildingProperties.floor[floorCount].heightOfGround = heightOfGround;
       
       var floorWallsStart = floorWalls.length;
       
@@ -392,15 +398,15 @@
         switch( floorNode.tagName )
         {
           case 'nodes':
-            this.parseFloorNodes( floorNode, floorheight );
+            parseFloorNodes( floorNode, floorheight );
             break;
             
           case 'walls':
-            this.parseFloorWalls( floorNode );
+            parseFloorWalls( floorNode );
             break;
             
           case 'rooms':
-            this.parseFloorRooms( floorNode, floorCount );
+            parseFloorRooms( floorNode, floorCount );
             break;
         }
       }
@@ -718,26 +724,44 @@
       Object3D.add( lineGroup );
       Object3D.add( wallGroup );
       
-      this.buildingProperties.floor[floorCount].Object3D = Object3D;
-      this.buildingProperties.floor[floorCount].nodeGroup = nodeGroup;
-      this.buildingProperties.floor[floorCount].lineGroup = lineGroup;
-      this.buildingProperties.floor[floorCount].wallGroup = wallGroup;
-      this.buildingProperties.Object3D.add( Object3D ); // add / link; note: we use that JavaScript is not copying objects but uses ref counting on them here!
+      self.buildingProperties.floor[floorCount].Object3D = Object3D;
+      self.buildingProperties.floor[floorCount].nodeGroup = nodeGroup;
+      self.buildingProperties.floor[floorCount].lineGroup = lineGroup;
+      self.buildingProperties.floor[floorCount].wallGroup = wallGroup;
+      self.buildingProperties.Object3D.add( Object3D ); // add / link; note: we use that JavaScript is not copying objects but uses ref counting on them here!
       
       heightOfGround += floorheight;
     }  // end floor
     
-    this.buildingProperties.x_center =  (this.buildingProperties.x_max -  this.buildingProperties.x_min) / 2;
-    this.buildingProperties.y_center =  (this.buildingProperties.y_max -  this.buildingProperties.y_min) / 2;
-    this.buildingProperties.size = Math.max( this.buildingProperties.x_center, this.buildingProperties.y_center );
-    imageCenter.x = this.buildingProperties.x_center;
-    imageCenter.y = this.buildingProperties.y_center;
-    imageCenter.z = this.buildingProperties.z_max / 2;
+    self.buildingProperties.x_center =  (self.buildingProperties.x_max -  self.buildingProperties.x_min) / 2;
+    self.buildingProperties.y_center =  (self.buildingProperties.y_max -  self.buildingProperties.y_min) / 2;
+    self.buildingProperties.size = Math.max( self.buildingProperties.x_center, self.buildingProperties.y_center );
+    imageCenter.x = self.buildingProperties.x_center;
+    imageCenter.y = self.buildingProperties.y_center;
+    imageCenter.z = self.buildingProperties.z_max / 2;
     
-    this.show3D( 35*Math.PI/180, 30*Math.PI/180, 10, new THREE.Vector3( imageCenter.x, imageCenter.y, imageCenter.z ) );
+    self.show3D( 35*Math.PI/180, 30*Math.PI/180, 10, new THREE.Vector3( imageCenter.x, imageCenter.y, imageCenter.z ) );
     //}
   };
   
+  /**
+   * Get the URL url and set up this object by its content
+   * @param {String} url
+   */
+  this.loadFloorPlan = function( url )
+  {
+    $.ajax({
+      url: url,
+      context: self,
+      success: function( xmlDoc ){ 
+        parseXMLFloorPlan( xmlDoc );
+        
+      },
+      dataType: 'xml',
+      async: false
+    });
+  }
+
   /**
    * Fill the <code>floorNodes</code> structure with the nodes from the
    * config file.
@@ -747,7 +771,7 @@
    * @param {Float}  floorheight The generic height of this floor that might be
    *                             overwritten by individual nodes.
    */
-  JSFloorPlan3D.prototype.parseFloorNodes = function( nodes, floorheight )
+  var parseFloorNodes = function( nodes, floorheight )
   {
     for( var i=0; i < nodes.childNodes.length; i++ )
     {
@@ -763,21 +787,21 @@
       
       floorNodes[id] = point;
       
-      if( undefined == this.buildingProperties.x_min ) 
+      if( undefined == self.buildingProperties.x_min ) 
       {
-        this.buildingProperties.x_min = point.x;
-        this.buildingProperties.x_max = point.x;
-        this.buildingProperties.y_min = point.y;
-        this.buildingProperties.y_max = point.y;
-        this.buildingProperties.z_min = point.z;
-        this.buildingProperties.z_max = point.z;
+        self.buildingProperties.x_min = point.x;
+        self.buildingProperties.x_max = point.x;
+        self.buildingProperties.y_min = point.y;
+        self.buildingProperties.y_max = point.y;
+        self.buildingProperties.z_min = point.z;
+        self.buildingProperties.z_max = point.z;
       } else {
-        if( this.buildingProperties.x_min > point.x ) this.buildingProperties.x_min = point.x;
-        if( this.buildingProperties.x_max < point.x ) this.buildingProperties.x_max = point.x;
-        if( this.buildingProperties.y_min > point.y ) this.buildingProperties.y_min = point.y;
-        if( this.buildingProperties.y_max < point.y ) this.buildingProperties.y_max = point.y;
-        if( this.buildingProperties.z_min > point.z ) this.buildingProperties.z_min = point.z;
-        if( this.buildingProperties.z_max < point.z ) this.buildingProperties.z_max = point.z;
+        if( self.buildingProperties.x_min > point.x ) self.buildingProperties.x_min = point.x;
+        if( self.buildingProperties.x_max < point.x ) self.buildingProperties.x_max = point.x;
+        if( self.buildingProperties.y_min > point.y ) self.buildingProperties.y_min = point.y;
+        if( self.buildingProperties.y_max < point.y ) self.buildingProperties.y_max = point.y;
+        if( self.buildingProperties.z_min > point.z ) self.buildingProperties.z_min = point.z;
+        if( self.buildingProperties.z_max < point.z ) self.buildingProperties.z_max = point.z;
       }
     }
   }
@@ -789,7 +813,7 @@
    * @private
    * @param {XMLDom} nodeGroup
    */
-  JSFloorPlan3D.prototype.parseFloorWalls = function( nodes )
+  var parseFloorWalls = function( nodes )
   {
     for( var i=0; i < nodes.childNodes.length; i++ )
     {
@@ -876,7 +900,7 @@
    * @param {XMLDom} nodeGroup
    * @param {Integer} floor    The floor number.
    */
-  JSFloorPlan3D.prototype.parseFloorRooms = function( nodes, floor )
+  var parseFloorRooms = function( nodes, floor )
   {
     rooms[floor] = new Array;
     for( var i=0; i < nodes.childNodes.length; i++ )
@@ -936,7 +960,7 @@
    * @private
    * @param {XMLDom} nodes
    */
-  JSFloorPlan3D.prototype.parseTextures = function( nodes )
+  var parseTextures = function( nodes )
   {
     return;
     for( var i=0; i < nodes.childNodes.length; i++ )
@@ -958,12 +982,9 @@
     
     ///////////////////////////////////////////////////////////////////////////
     // set the scene size
-    var WIDTH = 800,
-        HEIGHT = 400;
     
     // set some camera attributes
-    var VIEW_ANGLE = 45,
-        ASPECT = WIDTH / HEIGHT,
+    var ASPECT = WIDTH / HEIGHT,
         NEAR = 0.1,
         FAR = 10000;
     
@@ -994,7 +1015,6 @@
     renderer.shadowMapHeight = SHADOW_MAP_HEIGHT;
     renderer.shadowMapEnabled = true;
     //renderer.shadowMapSoft = true;
-    var projector = new THREE.Projector();
     
     // create a point light
     pointLight = new THREE.PointLight( 0xFFFFFF );
@@ -1008,10 +1028,6 @@
     // add to the scene
     //scene.add(pointLight);
     
-    currentThis.lightAzimut    = 3.9;
-    currentThis.lightElevation = 0.25;
-    currentThis.lightStrength  = 80;
-    currentThis.lightDistance  = 50;
     sunLight =  new THREE.SpotLight( 0xffffff );
     sunLight.position.set( 0, 1500, 1000 );
     sunLight.target.position.set( 0, 0, 0 );
@@ -1025,7 +1041,6 @@
     
     scene.add( thisObject3D );
     
-    var showFloor = showStates.showFloor;
     
     ///////////
     scene.add(sunLight);
@@ -1048,14 +1063,44 @@
     pointLight.position = camera.position;
   }
   
-  JSFloorPlan3D.prototype.render = function()
+  this.render = function()
   {
     renderer.render( scene, camera );
   }
   
-  JSFloorPlan3D.prototype.showWireframe = function( doShowWireframe )
+  this.setState = function( property, value, redraw )
   {
-    cubeMaterial.wireframe = doShowWireframe;
+    switch( property )
+    {
+      case 'showWireframe':
+        cubeMaterial.wireframe = value;
+        break;
+         
+      case 'fillColor':
+        cubeMaterial.color.setHex( parseInt( value, 16 ) );
+        break;
+        
+      case 'showFloor':
+        value = parseInt( value );
+    }
+    
+    showStates[ property ] = value;
+    
+    if( redraw ) // is set and true
+    {
+      update3D();
+    }
+  }
+  this.getState = function( property )
+  {
+    return showStates[ property ];
+  }
+  
+  this.hideFloor = function( floorNr, doShow )
+  {
+    THREE.SceneUtils.traverseHierarchy( self.buildingProperties.floor[floorNr].wallGroup, function( object ) {
+      object.visible = doShow; 
+    });
   }
   
   /**
@@ -1069,7 +1114,7 @@
    * @param {Number}  distnce      Distance between camera and <code>target</code>
    * @param {THREE.Vector3} target The point to look at
    */
-  JSFloorPlan3D.prototype.show3D = function( azimut, elevation, distance, target )
+  this.show3D = function( azimut, elevation, distance, target )
   {
     showStates.currentAzimut    = azimut;
     showStates.currentElevation = elevation;
@@ -1078,16 +1123,21 @@
     
     if( noSetup ) setup3D( this, this.buildingProperties.Object3D );
     
+    update3D();
+  }
+  
+  function update3D()
+  {
     // set up camera
-    setupCamera( azimut, elevation, distance, target );
+    setupCamera( showStates.currentAzimut, showStates.currentElevation, showStates.currentDistance, showStates.currentTarget );
     
     // set up sun
-    var sx = Math.sin(this.lightAzimut) * Math.cos(this.lightElevation);
-    var sy = Math.cos(this.lightAzimut) * Math.cos(this.lightElevation);
-    var sz = Math.sin(this.lightElevation);
+    var sx = Math.sin(showStates.lightAzimut) * Math.cos(showStates.lightElevation);
+    var sy = Math.cos(showStates.lightAzimut) * Math.cos(showStates.lightElevation);
+    var sz = Math.sin(showStates.lightElevation);
     sunLight.target.position = target;
-    sunLight.position = new THREE.Vector3( sx * this.lightDistance, sy * this.lightDistance, sz * this.lightDistance + target.z );
-    sunLight.intensity = this.lightStrength / 100.0;
+    sunLight.position = new THREE.Vector3( sx * showStates.lightDistance, sy * showStates.lightDistance, sz * showStates.lightDistance + target.z );
+    sunLight.intensity = showStates.lightStrength / 100.0;
     sunLightViewLine.geometry.vertices[0].position = sunLight.position;
     sunLightViewLine.geometry.vertices[1].position = sunLight.target.position;
     sunLightViewLine.geometry.__dirtyVertices = true;
@@ -1104,36 +1154,12 @@
       cubeMaterial.opacity = showStates.fillOpacity;
       cubeMaterial.transparent = showStates.fillOpacity < 1.0;
       cubeMaterial.depthTest   = !cubeMaterial.transparent;
-      THREE.SceneUtils.traverseHierarchy( JSFloorPlan3D.buildingProperties.Object3D, function( object ) {
+      THREE.SceneUtils.traverseHierarchy( self.buildingProperties.Object3D, function( object ) {
         object.doubleSided = cubeMaterial.transparent; 
       });
     }
     
-    // update color
-    switch( showStates.fillColor )
-    {
-      case 'black':
-        cubeMaterial.color.setRGB( 0.1, 0.1, 0.1 );
-        break;
-      case 'grey':
-        cubeMaterial.color.setRGB( 0.5, 0.5, 0.5 );
-        break;
-      case 'white':
-        cubeMaterial.color.setRGB( 1.0, 1.0, 1.0 );
-        break;
-      case 'blue':
-        cubeMaterial.color.setRGB( 0.0, 0.0, 0.8 );
-        break;
-      case 'red':
-        cubeMaterial.color.setRGB( 0.8, 0.0, 0.0 );
-        break;
-      case 'green':
-        cubeMaterial.color.setRGB( 0.0, 0.8, 0.0 );
-        break;
-    };
-    
-    //this.render();
-    renderer.render( scene, camera );
+    self.render();
   }
   
   /**
@@ -1151,7 +1177,7 @@
    * @param {Function} delayedFn   (optional) Function to call after animation is
    *                               finished
    */
-  JSFloorPlan3D.prototype.moveTo = function( floor, azimut, elevation, distance, target, delayedFn )
+  this.moveTo = function( floor, azimut, elevation, distance, target, delayedFn )
   {
     if( noSetup ) setup3D( this.buildingProperties.Object3D );
     
@@ -1192,7 +1218,7 @@
         showStates.currentElevation += rate.elevation;
         done = false;
       } else {
-        showStates.currenteElevation = elevation;
+        showStates.currentElevation = elevation;
       }
       if( (showStates.currentDistance + rate.distance) * rate.distance < distance * rate.distance )
       {
@@ -1241,6 +1267,29 @@
   }
   
   /**
+   * @method moveToRoom
+   */
+  this.moveToRoom = function( floor, room )
+  {
+    var target = new THREE.Vector3();
+    var dist;
+    if( room ) // use room if defined
+    {
+      target.x = room.center.x;
+      target.y = room.center.y;
+      dist = room.size / Math.tan( VIEW_ANGLE * Math.PI/180 / 2 );
+    } else {   // use whole floor otherwise
+      target.x = this.buildingProperties.x_center;
+      target.y = this.buildingProperties.y_center;
+      dist = this.buildingProperties.size / Math.tan( VIEW_ANGLE * Math.PI/180 / 2 );
+    }
+    target.z = this.buildingProperties.floor[ floor ].heightOfGround + 
+               this.buildingProperties.floor[ floor ].height / 2;
+    this.moveTo( floor, showStates.currentAzimut, showStates.currentElevation, dist, target );
+    return target;
+  }
+  
+  /**
    * Check if point <code>p</code> is in the zone <code>zone</code>. It's 
    * basically a point-in-polygon test using a ray casting from left infinity to
    * the point <code>p</code>.
@@ -1283,7 +1332,7 @@
    * @return {Object} If a zone / room was found a hash with the keys "room" and
    *                  "zone" will be returned otherwise an empty Object.
    */
-  JSFloorPlan3D.prototype.selectRoom = function( p, floor )
+  this.selectRoom = function( p, floor )
   {
     var thisFloor = rooms[floor];
     for( var room in thisFloor )
@@ -1308,7 +1357,7 @@
    * @param {Number} h Height in building space used for mapping
    * @return {THREE.Vector3} Point in building space
    */
-  JSFloorPlan3D.prototype.sceen2building = function( x, y, h )
+  this.sceen2building = function( x, y, h )
   {
     var vector = new THREE.Vector3( (x / WIDTH)*2-1, -(y / HEIGHT)*2+1, 0.5 );
     projector.unprojectVector( vector, camera );
@@ -1324,7 +1373,7 @@
    * @return {Object} Hash with keys <code>x</code> and <code>y</code> in screen
    *                  coordinates
    */
-  JSFloorPlan3D.prototype.building2screen = function( p )
+  this.building2screen = function( p )
   {
     var screen = p.clone();
     projector.projectVector( screen, camera );
@@ -1338,7 +1387,7 @@
    * @param {Function} event.data.callback This callback function will be called
    *                                       after the mouse event was translated
    */
-  JSFloorPlan3D.prototype.translateMouseEvent = function( event )
+  this.translateMouseEvent = function( event )
   {
     var tJSFloorPlan3D = event.data.JSFloorPlan3D;
     var thisFloor = tJSFloorPlan3D.buildingProperties.floor[showStates.showFloor];
@@ -1354,3 +1403,21 @@
   //Expose dQuery object to window as dQuery or JSlib
   window.JSFloorPlan3D = JSFloorPlan3D;
 })(window);
+
+/**
+ * Provides requestAnimationFrame in a cross browser way.
+ * http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+ * @class requestAnimationFrame
+ */
+
+if ( !window.requestAnimationFrame ) {
+  window.requestAnimationFrame = ( function() {
+    return window.webkitRequestAnimationFrame ||
+      window.mozRequestAnimationFrame ||
+      window.oRequestAnimationFrame ||
+      window.msRequestAnimationFrame ||
+      function( /* function FrameRequestCallback */ callback, /* DOMElement Element */ element ) {
+        window.setTimeout( callback, 1000 / 60 );
+    };
+  } )();
+}
