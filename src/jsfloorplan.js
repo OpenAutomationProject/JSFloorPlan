@@ -1306,6 +1306,9 @@
     {
       floor = this.buildingProperties.floorNames[floor];
     }
+    if( !(floor in this.buildingProperties.floor) )
+      return target; // early exit when floor is invalid
+      
     if( room ) // use room if defined
     {
       target.x = room.center.x;
