@@ -22,7 +22,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /**
- * The JSFLOORPLAN3D object is the single global object created by the
+ * The JSFloorPlan3D object is the single global object created by the
  * JSFloorPlan 3D library.
  * <p/>
  * The definition of the config file is:
@@ -136,26 +136,25 @@
  * @reqires jQuery, Three.js
  */
 
-/**
- * @class JSFLOORPLAN3D
- * @constructor FOO
- */
 (function( window, undefined ){
   ////////////////////////////////////////////////////////////////////////////
   // private static variables and methods:
   
-  /**
-  * Constant representing the ID of an ELEMENT_NODE
-  * @property ELEMENT_NODE
-  * @private
-  * @static
-  * @final
-  * @type Enum
-  */
+  // Constant representing the ID of an ELEMENT_NODE
   var ELEMENT_NODE = 1;
   
   ////////////////////////////////////////////////////////////////////////////
   // the library
+  
+  /**
+   * The object JSFloorPlan3D contains the whole API necessary to handle a 
+   * 3D floorplan.
+   * @class JSFloorPlan3D
+   * @constructor FOO
+   * @param {DOMElement} container The DOM element where floorplan will be 
+   *                               inserted
+   * @param {URL} floorPlan        The URL of the floorplan to show
+   */
   var JSFloorPlan3D = function( container, floorPlan ){
     // check and fix if the user forgot the "new" keyword
     if (!(this instanceof JSFloorPlan3D)) 
@@ -163,6 +162,11 @@
       return new JSFloorPlan3D( container, floorPlan );
     }
     
+    /**
+     * Private pointer to <i>this</i>
+     * @property self
+     * @private
+     */
     var self = this;
     
     /*
@@ -172,7 +176,10 @@
     }
     */
     
-    // public variables of this object instance
+    /**
+     * public variables of this object instance
+     * @property buildingProperties
+     */
     this.buildingProperties = { floor: [], Object3D: new THREE.Object3D(), floorNames:{} };
     
     // private variables of this object instance will follow
@@ -196,6 +203,8 @@
   
   /**
    * Set states that define how the floor plan is drawn
+   * @property showStates
+   * @private
    */
   var showStates = {
     currentAzimut: 1,              // North up
@@ -273,6 +282,7 @@
    * @private
    * @param {Point} start
    * @param {Point} end
+   * @return {Number}
    */
   function calcLength2D( start, end )
   {
@@ -756,10 +766,7 @@
     $.ajax({
       url: url,
       context: self,
-      success: function( xmlDoc ){ 
-        parseXMLFloorPlan( xmlDoc );
-        
-      },
+      success: function( xmlDoc ){ parseXMLFloorPlan( xmlDoc ); },
       dataType: 'xml',
       async: false
     });
@@ -826,7 +833,7 @@
       /**
        * Contain all informations known about a wall.
        * @class wall
-       * @for JSFLOORPLAN3D
+       * @for JSFloorPlan3D
        */
       var wall = new Object;
       /**
@@ -898,7 +905,7 @@
    * Fill the <code>rooms</code> array with the room elements from the
    * config file.
    * @method parseFloorRooms
-   * @for JSFLOORPLAN3D
+   * @for JSFloorPlan3D
    * @private
    * @param {XMLDom} nodeGroup
    * @param {Integer} floor    The floor number.
@@ -956,7 +963,6 @@
     }
   }
   
-  //var textures = new Object();
   /**
    * Dummy routine to handle textures.
    * @method parseTextures
@@ -965,7 +971,7 @@
    */
   var parseTextures = function( nodes )
   {
-    return;
+    return; // FIXME - this is currently a dummy...
     for( var i=0; i < nodes.childNodes.length; i++ )
     {
       node = nodes.childNodes[i];
@@ -1055,6 +1061,15 @@
     $container.append(renderer.domElement);
   }
   
+  /**
+   * Set up the camera.
+   * @method setupCamera
+   * @param {Number} azimut
+   * @param {Number} elevation
+   * @param {Number} distance
+   * @param {THREE.Vector3} target
+   * @private
+   */
   function setupCamera( azimut, elevation, distance, target )
   {
     var cx = Math.sin(azimut) * Math.cos(elevation);
@@ -1066,11 +1081,22 @@
     pointLight.position = camera.position;
   }
   
+  /**
+   * Render the scene
+   * @method render
+   */
   this.render = function()
   {
     renderer.render( scene, camera );
   }
   
+  /**
+   * Change an internal state
+   * @method setState
+   * @param {String} property The property to set
+   * @param {String} value    The new value for the property
+   * @param {Bool}   redraw   Redraw the scene if true
+   */
   this.setState = function( property, value, redraw )
   {
     switch( property )
@@ -1094,6 +1120,12 @@
       update3D();
     }
   }
+  
+  /**
+   * Get the value of an internal state
+   * @method getState
+   * @return The value of the state
+   */
   this.getState = function( property )
   {
     return showStates[ property ];
@@ -1102,6 +1134,10 @@
   /**
    * Resize the canvas. This might be done explicit by passing a width and
    * height. Or implicit by passing no parameter or just the redraw parameter.
+   * @method resize
+   * @param {Number} width
+   * @param {Number} height
+   * @param {Bool}   redraw
    */
   this.resize = function( width, height, redraw )
   {
@@ -1124,6 +1160,13 @@
     }
   }
   
+  /**
+   * Show or hide a floor
+   * @mthod hideFloor
+   * @param {Number} floorNr The number of the floor to change visibility
+   * @param {Bool}   doShow  <code>true</code> if floor has to be visible, 
+   *                         <code>false</code> if it has to be hidden
+   */
   this.hideFloor = function( floorNr, doShow )
   {
     THREE.SceneUtils.traverseHierarchy( self.buildingProperties.floor[floorNr].wallGroup, function( object ) {
@@ -1154,6 +1197,11 @@
     update3D();
   }
   
+  /**
+   * Update internal
+   * @method update3D
+   * @private
+   */
   function update3D()
   {
     // set up camera
@@ -1296,7 +1344,12 @@
   }
   
   /**
+   * Move display to the given room on the given floor. If <code>room</code>
+   * is undefined, the whole floor will be shown.
    * @method moveToRoom
+   * @param {Number} floor
+   * @param {Room}   room
+   * @return {THREE.Vector3} Target
    */
   this.moveToRoom = function( floor, room, hideOtherFloors, animate )
   {
@@ -1467,7 +1520,6 @@
  * http://paulirish.com/2011/requestanimationframe-for-smart-animating/
  * @class requestAnimationFrame
  */
-
 if ( !window.requestAnimationFrame ) {
   window.requestAnimationFrame = ( function() {
     return window.webkitRequestAnimationFrame ||
