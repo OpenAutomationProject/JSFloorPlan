@@ -173,7 +173,7 @@
     */
     
     // public variables of this object instance
-    this.buildingProperties = { floor: [], Object3D: new THREE.Object3D() };
+    this.buildingProperties = { floor: [], Object3D: new THREE.Object3D(), floorNames:{} };
     
     // private variables of this object instance will follow
   
@@ -384,6 +384,7 @@
       
       var floorName = floor.getAttribute('name');
       self.buildingProperties.floor[floorCount].name = floorName;
+      self.buildingProperties.floorNames[floorName] = floorCount;
       
       var floorheight = Number( floor.getAttribute('height') );
       self.buildingProperties.floor[floorCount].height = floorheight;
@@ -1098,6 +1099,31 @@
     return showStates[ property ];
   }
   
+  /**
+   * Resize the canvas. This might be done explicit by passing a width and
+   * height. Or implicit by passing no parameter or just the redraw parameter.
+   */
+  this.resize = function( width, height, redraw )
+  {
+    if( arguments.length === 2 || arguments.length === 3 )
+    {
+      WIDTH  = width;
+      HEIGHT = height;
+    } else {
+      WIDTH  = container.find('canvas').width();
+      HEIGHT = container.find('canvas').height();
+      redraw = width; // the first and only parameter is now the "redraw"
+    }
+    ASPECT = WIDTH / HEIGHT;
+    renderer.setSize(WIDTH, HEIGHT);
+    camera.aspect = ASPECT;
+    
+    if( redraw ) // is set and true
+    {
+      update3D();
+    }
+  }
+  
   this.hideFloor = function( floorNr, doShow )
   {
     THREE.SceneUtils.traverseHierarchy( self.buildingProperties.floor[floorNr].wallGroup, function( object ) {
@@ -1178,13 +1204,14 @@
    *                               is taken from the parameter <code>floor</code>
    * @param {Function} delayedFn   (optional) Function to call after animation is
    *                               finished
+   * @param {Bool}     animate     Animate unless set to false
    */
-  this.moveTo = function( floor, azimut, elevation, distance, target, delayedFn )
+  this.moveTo = function( floor, azimut, elevation, distance, target, delayedFn, animate )
   {
     if( noSetup ) setup3D( this.buildingProperties.Object3D );
     
     // speed of the changing
-    var steps = 100;
+    var steps = (animate == undefined || !animate) ? 1 : 100;
     var rate = { azimut: 0.0, elevation: 0.0, distance: 0.0, target: new THREE.Vector3 };
     
     function calcRate()
@@ -1271,10 +1298,14 @@
   /**
    * @method moveToRoom
    */
-  this.moveToRoom = function( floor, room )
+  this.moveToRoom = function( floor, room, hideOtherFloors, animate )
   {
     var target = new THREE.Vector3();
     var dist;
+    if( typeof floor === 'string' )
+    {
+      floor = this.buildingProperties.floorNames[floor];
+    }
     if( room ) // use room if defined
     {
       target.x = room.center.x;
@@ -1287,7 +1318,25 @@
     }
     target.z = this.buildingProperties.floor[ floor ].heightOfGround + 
                this.buildingProperties.floor[ floor ].height / 2;
-    this.moveTo( floor, showStates.currentAzimut, showStates.currentElevation, dist, target );
+    if( hideOtherFloors )
+    {
+      // show relevant floors
+      var minFloor = floor < showStates.showFloor ? floor : showStates.showFloor;
+      var maxFloor = floor < showStates.showFloor ? showStates.showFloor : floor;
+      var f = self.buildingProperties.floor.length-1;
+      for( ; f >= 0; f-- ) self.hideFloor( f, minFloor <= f && f <= maxFloor );
+    }
+    this.moveTo( floor, showStates.currentAzimut, showStates.currentElevation, dist, target, 
+      function(){
+        if( hideOtherFloors )
+        {
+          // hide all except target floors
+          var f = self.buildingProperties.floor.length-1;
+          for( ; f >= 0; f-- ) self.hideFloor( f, f == floor );
+        }
+        self.render();
+      }, animate );
+    showStates.showFloor = floor;
     return target;
   }
   
