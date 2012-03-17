@@ -1351,7 +1351,7 @@
    * @param {Room}   room
    * @return {THREE.Vector3} Target
    */
-  this.moveToRoom = function( floor, room, hideOtherFloors, animate )
+  this.moveToRoom = function( floor, room, hideOtherFloors, animate, callback )
   {
     var target = new THREE.Vector3();
     var dist;
@@ -1391,6 +1391,7 @@
           for( ; f >= 0; f-- ) self.hideFloor( f, f == floor );
         }
         self.render();
+        if( callback !== undefined ) callback();
       }, animate );
     showStates.showFloor = floor;
     return target;
