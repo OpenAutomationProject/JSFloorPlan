@@ -1250,11 +1250,12 @@
    * @param {THREE.Vector3} target The point to look at (only <code>x</code>
    *                               and <code>y</code> are used the <code>z</code>
    *                               is taken from the parameter <code>floor</code>
+   * @param {Function} animateFn   (optional) Function to call during each animation step
    * @param {Function} delayedFn   (optional) Function to call after animation is
    *                               finished
    * @param {Bool}     animate     Animate unless set to false
    */
-  this.moveTo = function( floor, azimut, elevation, distance, target, delayedFn, animate )
+  this.moveTo = function( floor, azimut, elevation, distance, target, animateFn, delayedFn, animate )
   {
     if( noSetup ) setup3D( this.buildingProperties.Object3D );
     
@@ -1328,6 +1329,7 @@
       
       setupCamera( showStates.currentAzimut, showStates.currentElevation, showStates.currentDistance, showStates.currentTarget );
       renderer.render( scene, camera );
+      if( animateFn ) animateFn();
       
       if( !done ) 
         window.requestAnimationFrame( doMove );
@@ -1382,7 +1384,7 @@
       var f = self.buildingProperties.floor.length-1;
       for( ; f >= 0; f-- ) self.hideFloor( f, minFloor <= f && f <= maxFloor );
     }
-    this.moveTo( floor, showStates.currentAzimut, showStates.currentElevation, dist, target, 
+    this.moveTo( floor, showStates.currentAzimut, showStates.currentElevation, dist, target, undefined,
       function(){
         if( hideOtherFloors )
         {
