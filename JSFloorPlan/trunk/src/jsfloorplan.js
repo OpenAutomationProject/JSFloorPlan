@@ -1349,11 +1349,15 @@
    * Move display to the given room on the given floor. If <code>room</code>
    * is undefined, the whole floor will be shown.
    * @method moveToRoom
-   * @param {Number} floor
-   * @param {Room}   room
+   * @param {Number}   floor
+   * @param {Room}     room
+   * @param {Bool}     hideOtherFloors
+   * @param {Bool}     animate
+   * @param {Function} animateFn Callback
+   * @param {Function} delayedFn Callback
    * @return {THREE.Vector3} Target
    */
-  this.moveToRoom = function( floor, room, hideOtherFloors, animate, callback )
+  this.moveToRoom = function( floor, room, hideOtherFloors, animate, animateFn, delayedFn )
   {
     var target = new THREE.Vector3();
     var dist;
@@ -1384,7 +1388,7 @@
       var f = self.buildingProperties.floor.length-1;
       for( ; f >= 0; f-- ) self.hideFloor( f, minFloor <= f && f <= maxFloor );
     }
-    this.moveTo( floor, showStates.currentAzimut, showStates.currentElevation, dist, target, undefined,
+    this.moveTo( floor, showStates.currentAzimut, showStates.currentElevation, dist, target, animateFn,
       function(){
         if( hideOtherFloors )
         {
@@ -1393,7 +1397,7 @@
           for( ; f >= 0; f-- ) self.hideFloor( f, f == floor );
         }
         self.render();
-        if( callback !== undefined ) callback();
+        if( delayedFn !== undefined ) delayedFn();
       }, animate );
     showStates.showFloor = floor;
     return target;
