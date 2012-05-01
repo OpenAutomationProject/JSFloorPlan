@@ -29,7 +29,7 @@
 
 function handleMouseClickEvent( event )
 {
-  target = j.moveToRoom( j.getState('showFloor'), event.room.room );
+  target = j.moveToRoom( j.getState('showFloor'), event.room.room, true );
   updateSlider();
 }
 /////////////////////////////////////////////////////////////////////////////
@@ -129,12 +129,12 @@ function selectChange( name, old, onlyInit )
       });
       target.z = j.buildingProperties.floor[ j.getState( 'showFloor' ) ].heightOfGround + 
                  j.buildingProperties.floor[ j.getState( 'showFloor' ) ].height / 2;
-      j.moveTo( j.getState( 'showFloor' ), roll, tilt, dist, target, function(){
+      j.moveTo( j.getState( 'showFloor' ), roll, tilt, dist, target, undefined, function(){
         $( j.buildingProperties.floor ).each( function( number ){
           j.hideFloor( number, j.getState( 'showFloor' ) == number );
         });
         j.show3D( roll, tilt, dist, target );
-      });
+      }, true );
       return false;
       break;
   }
